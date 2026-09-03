@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260903g";
-import { adminEmails, collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903g";
+import { designs, materials, variants } from "./catalogue.js?v=20260903h";
+import { adminEmails, collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903h";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
