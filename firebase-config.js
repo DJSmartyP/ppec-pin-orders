@@ -1,18 +1,18 @@
 // Replace the placeholder values below with the Firebase web app config
 // from Project settings > General > Your apps.
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDS9lA7nHq2xXoJ4Ip9_YqTGh3LzoM-r2A",
+  authDomain: "ppec-pin-preorder.firebaseapp.com",
+  projectId: "ppec-pin-preorder",
+  storageBucket: "ppec-pin-preorder.firebasestorage.app",
+  messagingSenderId: "429893079137",
+  appId: "1:429893079137:web:c7d41ea5214f2dbfc99a20"
 };
 
 // Admin dashboard access is checked in the page and enforced again by
 // Firestore security rules. Keep this list in sync with firestore.rules.
 export const adminEmails = [
-  "your-admin-email@example.com"
+  "nickpatel.trainer@gmail.com"
 ];
 
 export const collectionName = "interestSubmissions";
