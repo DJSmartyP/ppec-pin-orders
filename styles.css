@@ -622,12 +622,6 @@ input[name="discordUsername"],
   font-weight: 800;
 }
 
-.cost-field:first-child,
-.cost-field:nth-child(2),
-.cost-field:nth-child(3) {
-  grid-column: 1 / -1;
-}
-
 .cost-field input {
   width: 100%;
   min-height: 44px;

@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260903d";
-import { adminEmails, collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903d";
+import { designs, materials, variants } from "./catalogue.js?v=20260903g";
+import { adminEmails, collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903g";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -30,6 +30,8 @@ const exportButton = document.querySelector("#export-csv");
 const profitResultGrid = document.querySelector("#profit-result-grid");
 const profitInputs = {
   sellingPrice: document.querySelector("#profit-selling-price"),
+  usdRate: document.querySelector("#profit-usd-rate"),
+  vograceShipping: document.querySelector("#profit-vograce-shipping"),
   fixedCosts: document.querySelector("#profit-fixed-costs"),
   percentCost: document.querySelector("#profit-percent-cost")
 };
@@ -40,6 +42,26 @@ const tierLists = {
 const addTierButtons = {
   acrylic: document.querySelector("#add-acrylic-tier"),
   wood: document.querySelector("#add-wood-tier")
+};
+const defaultTierPrices = {
+  acrylic: [
+    { minQty: 1, cost: "1.53" },
+    { minQty: 16, cost: "1.25" },
+    { minQty: 50, cost: "1.20" },
+    { minQty: 100, cost: "1.10" },
+    { minQty: 300, cost: "1.05" },
+    { minQty: 500, cost: "0.99" },
+    { minQty: 1000, cost: "0.94" }
+  ],
+  wood: [
+    { minQty: 1, cost: "0.96" },
+    { minQty: 16, cost: "0.92" },
+    { minQty: 50, cost: "0.89" },
+    { minQty: 100, cost: "0.86" },
+    { minQty: 300, cost: "0.83" },
+    { minQty: 500, cost: "0.80" },
+    { minQty: 1000, cost: "0.75" }
+  ]
 };
 
 const configured = isFirebaseConfigured();
@@ -210,10 +232,12 @@ function renderDashboard() {
 function initialiseProfitInputs() {
   const savedValues = readProfitInputs();
   profitInputs.sellingPrice.value = savedValues.sellingPrice || formatInputPounds(unitPricePence);
+  profitInputs.usdRate.value = savedValues.usdRate || "0.7402";
+  profitInputs.vograceShipping.value = savedValues.vograceShipping || "20.00";
   profitInputs.fixedCosts.value = savedValues.fixedCosts || "";
   profitInputs.percentCost.value = savedValues.percentCost || "";
-  renderTierInputs("acrylic", savedValues.tiers?.acrylic || defaultTiers(savedValues.acrylicCost));
-  renderTierInputs("wood", savedValues.tiers?.wood || defaultTiers(savedValues.woodCost));
+  renderTierInputs("acrylic", savedValues.tiers?.acrylic || defaultTiers("acrylic", savedValues.acrylicCost));
+  renderTierInputs("wood", savedValues.tiers?.wood || defaultTiers("wood", savedValues.woodCost));
 
   Object.values(profitInputs).forEach((input) => {
     input.addEventListener("input", () => {
@@ -254,15 +278,20 @@ function initialiseProfitInputs() {
 
 function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
   const sellingPricePence = poundsInputToPence(profitInputs.sellingPrice.value || formatInputPounds(unitPricePence));
+  const usdToGbpRate = numberInput(profitInputs.usdRate.value || "0.7402");
   const acrylicTier = tierForQuantity("acrylic", acrylicTotal);
   const woodTier = tierForQuantity("wood", woodTotal);
+  const vograceShippingCents = dollarsInputToCents(profitInputs.vograceShipping.value || "20");
   const fixedCostsPence = poundsInputToPence(profitInputs.fixedCosts.value);
   const percentCostRate = numberInput(profitInputs.percentCost.value) / 100;
 
   const revenuePence = totalPins * sellingPricePence;
-  const productCostPence = (acrylicTotal * acrylicTier.costPence) + (woodTotal * woodTier.costPence);
+  const productCostUsdCents = (acrylicTotal * acrylicTier.costCents) + (woodTotal * woodTier.costCents);
+  const vograceTotalUsdCents = productCostUsdCents + vograceShippingCents;
+  const productCostPence = Math.round(productCostUsdCents * usdToGbpRate);
+  const vograceShippingPence = Math.round(vograceShippingCents * usdToGbpRate);
   const percentCostPence = Math.round(revenuePence * percentCostRate);
-  const totalCostPence = productCostPence + fixedCostsPence + percentCostPence;
+  const totalCostPence = productCostPence + vograceShippingPence + fixedCostsPence + percentCostPence;
   const profitPence = revenuePence - totalCostPence;
   const margin = revenuePence > 0 ? `${Math.round((profitPence / revenuePence) * 1000) / 10}%` : "0%";
   const variableCostPerPin = totalPins > 0 ? (productCostPence + percentCostPence) / totalPins : 0;
@@ -273,8 +302,10 @@ function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
 
   profitResultGrid.innerHTML = [
     profitMetric("Estimated revenue", formatPounds(revenuePence)),
-    profitMetric("Product cost", formatPounds(productCostPence)),
-    profitMetric("Fixed + percentage costs", formatPounds(fixedCostsPence + percentCostPence)),
+    profitMetric("Vograce product cost", formatDollars(productCostUsdCents)),
+    profitMetric("Vograce total with shipping", formatDollars(vograceTotalUsdCents)),
+    profitMetric("Estimated Vograce cost", formatPounds(productCostPence + vograceShippingPence)),
+    profitMetric("Other fixed + percentage costs", formatPounds(fixedCostsPence + percentCostPence)),
     profitMetric("Estimated profit", formatPounds(profitPence), profitPence >= 0 ? "good" : "bad"),
     profitMetric("Profit margin", margin),
     profitMetric("Break-even pins", breakEvenPins),
@@ -295,6 +326,8 @@ function profitMetric(label, value, tone = "") {
 function saveProfitInputs() {
   localStorage.setItem("ppecProfitInputs", JSON.stringify({
     sellingPrice: profitInputs.sellingPrice.value,
+    usdRate: profitInputs.usdRate.value,
+    vograceShipping: profitInputs.vograceShipping.value,
     fixedCosts: profitInputs.fixedCosts.value,
     percentCost: profitInputs.percentCost.value,
     tiers: {
@@ -321,7 +354,7 @@ function renderTierInputs(material, tiers) {
         <input type="number" min="1" step="1" inputmode="numeric" value="${tier.minQty}" data-tier-min>
       </label>
       <label>
-        Cost per pin (£)
+        Cost per pin ($)
         <input type="number" min="0" step="0.01" inputmode="decimal" value="${tier.cost}" placeholder="0.00" data-tier-cost>
       </label>
       <button class="danger-button compact-button" type="button" data-remove-tier="${index}" ${normalisedTiers.length === 1 ? "disabled" : ""}>Remove</button>
@@ -348,8 +381,9 @@ function normaliseTiers(tiers) {
   return rows.length ? rows : defaultTiers();
 }
 
-function defaultTiers(cost = "") {
-  return [{ minQty: 1, cost }];
+function defaultTiers(material = "wood", cost = "") {
+  if (cost) return [{ minQty: 1, cost }];
+  return defaultTierPrices[material] || [{ minQty: 1, cost: "" }];
 }
 
 function nextTierQuantity(tiers) {
@@ -361,18 +395,18 @@ function tierForQuantity(material, quantity) {
   const tiers = readTiersFromDom(material);
   const activeTier = tiers
     .filter((tier) => quantity >= tier.minQty)
-    .at(-1) || tiers[0] || defaultTiers()[0];
+    .at(-1) || tiers[0] || defaultTiers(material)[0];
 
   return {
     minQty: activeTier.minQty,
     cost: activeTier.cost,
-    costPence: poundsInputToPence(activeTier.cost)
+    costCents: dollarsInputToCents(activeTier.cost)
   };
 }
 
 function tierLabel(tier, quantity) {
   if (!quantity) return "No pins";
-  return `${formatPounds(tier.costPence)} from ${tier.minQty}+`;
+  return `${formatDollars(tier.costCents)} from ${tier.minQty}+`;
 }
 
 function addSubmissionToAggregates(submission) {
@@ -477,6 +511,18 @@ function formatInputPounds(pence) {
 
 function poundsInputToPence(value) {
   return Math.round(numberInput(value) * 100);
+}
+
+function dollarsInputToCents(value) {
+  return Math.round(numberInput(value) * 100);
+}
+
+function formatDollars(cents) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2
+  }).format(cents / 100);
 }
 
 function numberInput(value) {
