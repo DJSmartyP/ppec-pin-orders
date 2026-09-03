@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js";
-import { collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js";
+import { designs, materials, variants } from "./catalogue.js?v=20260903b";
+import { collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903b";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   addDoc,
@@ -87,8 +87,7 @@ form.addEventListener("submit", async (event) => {
       submittedAt: serverTimestamp()
     });
 
-    resetForm();
-    showMessage("Thank you. Your interest has been recorded. You can submit again later if you need to send a revised response.", "success");
+    window.location.href = "thanks.html";
   } catch (error) {
     console.error(error);
     showMessage("Sorry, something went wrong while saving your response. Please try again.", "error");
@@ -117,7 +116,9 @@ function renderCatalogue() {
     return `
       <article class="badge-card">
         <div class="badge-image-wrap">
-          <img src="${design.image}" alt="${design.alt}" loading="lazy">
+          <img class="badge-art product-art" src="${design.image}" alt="${design.alt}" loading="lazy">
+          <img class="badge-art reference-art" src="${design.referenceImage}" alt="${design.referenceAlt}" loading="lazy">
+          <span class="reference-label">Reference photo</span>
         </div>
         <div class="badge-card-body">
           <div>
