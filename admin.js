@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260903b";
-import { adminEmails, collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903b";
+import { designs, materials, variants } from "./catalogue.js?v=20260903d";
+import { adminEmails, collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903d";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -27,6 +27,20 @@ const materialTotals = document.querySelector("#material-totals");
 const designTotals = document.querySelector("#design-totals");
 const submissionList = document.querySelector("#submission-list");
 const exportButton = document.querySelector("#export-csv");
+const profitResultGrid = document.querySelector("#profit-result-grid");
+const profitInputs = {
+  sellingPrice: document.querySelector("#profit-selling-price"),
+  fixedCosts: document.querySelector("#profit-fixed-costs"),
+  percentCost: document.querySelector("#profit-percent-cost")
+};
+const tierLists = {
+  acrylic: document.querySelector("#acrylic-tier-list"),
+  wood: document.querySelector("#wood-tier-list")
+};
+const addTierButtons = {
+  acrylic: document.querySelector("#add-acrylic-tier"),
+  wood: document.querySelector("#add-wood-tier")
+};
 
 const configured = isFirebaseConfigured();
 const app = configured ? initializeApp(firebaseConfig) : null;
@@ -35,6 +49,8 @@ const db = configured ? getFirestore(app) : null;
 
 let submissions = [];
 let aggregates = createEmptyAggregates();
+
+initialiseProfitInputs();
 
 if (!configured) {
   signInButton.disabled = true;
@@ -127,6 +143,7 @@ function renderDashboard() {
   const totalPins = variants.reduce((sum, variant) => sum + aggregates.byVariant[variant.key], 0);
   const acrylicTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_acrylic`], 0);
   const woodTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_wood`], 0);
+  renderProfitEstimate({ acrylicTotal, woodTotal, totalPins });
 
   metricGrid.innerHTML = [
     metric("Submissions", submissions.length),
@@ -188,6 +205,174 @@ function renderDashboard() {
       </article>
     `;
   }).join("");
+}
+
+function initialiseProfitInputs() {
+  const savedValues = readProfitInputs();
+  profitInputs.sellingPrice.value = savedValues.sellingPrice || formatInputPounds(unitPricePence);
+  profitInputs.fixedCosts.value = savedValues.fixedCosts || "";
+  profitInputs.percentCost.value = savedValues.percentCost || "";
+  renderTierInputs("acrylic", savedValues.tiers?.acrylic || defaultTiers(savedValues.acrylicCost));
+  renderTierInputs("wood", savedValues.tiers?.wood || defaultTiers(savedValues.woodCost));
+
+  Object.values(profitInputs).forEach((input) => {
+    input.addEventListener("input", () => {
+      saveProfitInputs();
+      renderDashboard();
+    });
+  });
+
+  Object.entries(tierLists).forEach(([material, list]) => {
+    list.addEventListener("input", () => {
+      saveProfitInputs();
+      renderDashboard();
+    });
+
+    list.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-remove-tier]");
+      if (!button) return;
+
+      const rows = [...list.querySelectorAll(".tier-row")];
+      if (rows.length <= 1) return;
+
+      const tiers = readTiersFromDom(material);
+      tiers.splice(Number(button.dataset.removeTier), 1);
+      renderTierInputs(material, tiers);
+      saveProfitInputs();
+      renderDashboard();
+    });
+
+    addTierButtons[material].addEventListener("click", () => {
+      const tiers = readTiersFromDom(material);
+      tiers.push({ minQty: nextTierQuantity(tiers), cost: "" });
+      renderTierInputs(material, tiers);
+      saveProfitInputs();
+      renderDashboard();
+    });
+  });
+}
+
+function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
+  const sellingPricePence = poundsInputToPence(profitInputs.sellingPrice.value || formatInputPounds(unitPricePence));
+  const acrylicTier = tierForQuantity("acrylic", acrylicTotal);
+  const woodTier = tierForQuantity("wood", woodTotal);
+  const fixedCostsPence = poundsInputToPence(profitInputs.fixedCosts.value);
+  const percentCostRate = numberInput(profitInputs.percentCost.value) / 100;
+
+  const revenuePence = totalPins * sellingPricePence;
+  const productCostPence = (acrylicTotal * acrylicTier.costPence) + (woodTotal * woodTier.costPence);
+  const percentCostPence = Math.round(revenuePence * percentCostRate);
+  const totalCostPence = productCostPence + fixedCostsPence + percentCostPence;
+  const profitPence = revenuePence - totalCostPence;
+  const margin = revenuePence > 0 ? `${Math.round((profitPence / revenuePence) * 1000) / 10}%` : "0%";
+  const variableCostPerPin = totalPins > 0 ? (productCostPence + percentCostPence) / totalPins : 0;
+  const contributionPerPin = sellingPricePence - variableCostPerPin;
+  const breakEvenPins = contributionPerPin > 0 && fixedCostsPence > 0
+    ? Math.ceil(fixedCostsPence / contributionPerPin)
+    : fixedCostsPence > 0 ? "Not covered" : 0;
+
+  profitResultGrid.innerHTML = [
+    profitMetric("Estimated revenue", formatPounds(revenuePence)),
+    profitMetric("Product cost", formatPounds(productCostPence)),
+    profitMetric("Fixed + percentage costs", formatPounds(fixedCostsPence + percentCostPence)),
+    profitMetric("Estimated profit", formatPounds(profitPence), profitPence >= 0 ? "good" : "bad"),
+    profitMetric("Profit margin", margin),
+    profitMetric("Break-even pins", breakEvenPins),
+    profitMetric("Acrylic tier used", tierLabel(acrylicTier, acrylicTotal)),
+    profitMetric("Wood tier used", tierLabel(woodTier, woodTotal))
+  ].join("");
+}
+
+function profitMetric(label, value, tone = "") {
+  return `
+    <article class="profit-result ${tone}">
+      <span>${label}</span>
+      <strong>${value}</strong>
+    </article>
+  `;
+}
+
+function saveProfitInputs() {
+  localStorage.setItem("ppecProfitInputs", JSON.stringify({
+    sellingPrice: profitInputs.sellingPrice.value,
+    fixedCosts: profitInputs.fixedCosts.value,
+    percentCost: profitInputs.percentCost.value,
+    tiers: {
+      acrylic: readTiersFromDom("acrylic"),
+      wood: readTiersFromDom("wood")
+    }
+  }));
+}
+
+function readProfitInputs() {
+  try {
+    return JSON.parse(localStorage.getItem("ppecProfitInputs")) || {};
+  } catch {
+    return {};
+  }
+}
+
+function renderTierInputs(material, tiers) {
+  const normalisedTiers = normaliseTiers(tiers);
+  tierLists[material].innerHTML = normalisedTiers.map((tier, index) => `
+    <div class="tier-row">
+      <label>
+        From qty
+        <input type="number" min="1" step="1" inputmode="numeric" value="${tier.minQty}" data-tier-min>
+      </label>
+      <label>
+        Cost per pin (£)
+        <input type="number" min="0" step="0.01" inputmode="decimal" value="${tier.cost}" placeholder="0.00" data-tier-cost>
+      </label>
+      <button class="danger-button compact-button" type="button" data-remove-tier="${index}" ${normalisedTiers.length === 1 ? "disabled" : ""}>Remove</button>
+    </div>
+  `).join("");
+}
+
+function readTiersFromDom(material) {
+  const rows = [...tierLists[material].querySelectorAll(".tier-row")];
+  return normaliseTiers(rows.map((row) => ({
+    minQty: row.querySelector("[data-tier-min]").value,
+    cost: row.querySelector("[data-tier-cost]").value
+  })));
+}
+
+function normaliseTiers(tiers) {
+  const rows = tiers
+    .map((tier) => ({
+      minQty: Math.max(1, Math.floor(numberInput(tier.minQty || 1))),
+      cost: String(tier.cost ?? "")
+    }))
+    .sort((a, b) => a.minQty - b.minQty);
+
+  return rows.length ? rows : defaultTiers();
+}
+
+function defaultTiers(cost = "") {
+  return [{ minQty: 1, cost }];
+}
+
+function nextTierQuantity(tiers) {
+  const highest = tiers.reduce((max, tier) => Math.max(max, numberInput(tier.minQty)), 0);
+  return highest > 0 ? highest + 25 : 1;
+}
+
+function tierForQuantity(material, quantity) {
+  const tiers = readTiersFromDom(material);
+  const activeTier = tiers
+    .filter((tier) => quantity >= tier.minQty)
+    .at(-1) || tiers[0] || defaultTiers()[0];
+
+  return {
+    minQty: activeTier.minQty,
+    cost: activeTier.cost,
+    costPence: poundsInputToPence(activeTier.cost)
+  };
+}
+
+function tierLabel(tier, quantity) {
+  if (!quantity) return "No pins";
+  return `${formatPounds(tier.costPence)} from ${tier.minQty}+`;
 }
 
 function addSubmissionToAggregates(submission) {
@@ -284,6 +469,19 @@ function formatPounds(pence) {
     currency: "GBP",
     maximumFractionDigits: 0
   }).format(pence / 100);
+}
+
+function formatInputPounds(pence) {
+  return String((pence / 100).toFixed(2));
+}
+
+function poundsInputToPence(value) {
+  return Math.round(numberInput(value) * 100);
+}
+
+function numberInput(value) {
+  const number = Number.parseFloat(value);
+  return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
 function formatDate(value) {

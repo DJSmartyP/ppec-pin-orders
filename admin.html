@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PPEC Badge Admin</title>
     <meta name="description" content="Admin dashboard for PPEC badge interest submissions.">
-    <link rel="stylesheet" href="styles.css?v=20260903b">
+    <link rel="stylesheet" href="styles.css?v=20260903d">
   </head>
   <body>
     <header class="site-header">
@@ -31,6 +31,50 @@
 
       <section class="dashboard hidden" id="dashboard" aria-label="Admin dashboard">
         <div class="metric-grid" id="metric-grid"></div>
+
+        <section class="profit-panel" aria-labelledby="profit-title">
+          <div class="dashboard-actions">
+            <div>
+              <h2 id="profit-title">Profit estimate</h2>
+              <p class="section-note">Add your Vograce and order costs here. These figures stay in this browser and are not shown publicly.</p>
+            </div>
+          </div>
+
+          <div class="profit-layout">
+            <div class="cost-input-grid">
+              <label class="cost-field" for="profit-selling-price">
+                Selling price per pin (£)
+                <input id="profit-selling-price" type="number" min="0" step="0.01" inputmode="decimal">
+              </label>
+              <label class="cost-field" for="profit-fixed-costs">
+                Shipping, setup and other fixed costs (£)
+                <input id="profit-fixed-costs" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+              </label>
+              <label class="cost-field" for="profit-percent-cost">
+                Payment, packing or buffer (%)
+                <input id="profit-percent-cost" type="number" min="0" step="0.1" inputmode="decimal" placeholder="0">
+              </label>
+
+              <section class="tier-card" aria-labelledby="acrylic-tier-title">
+                <div class="tier-card-head">
+                  <h3 id="acrylic-tier-title">Acrylic Vograce tiers</h3>
+                  <button class="secondary-button compact-button" id="add-acrylic-tier" type="button">Add tier</button>
+                </div>
+                <div class="tier-list" id="acrylic-tier-list"></div>
+              </section>
+
+              <section class="tier-card" aria-labelledby="wood-tier-title">
+                <div class="tier-card-head">
+                  <h3 id="wood-tier-title">Wood Vograce tiers</h3>
+                  <button class="secondary-button compact-button" id="add-wood-tier" type="button">Add tier</button>
+                </div>
+                <div class="tier-list" id="wood-tier-list"></div>
+              </section>
+            </div>
+
+            <div class="profit-result-grid" id="profit-result-grid" aria-live="polite"></div>
+          </div>
+        </section>
 
         <div class="dashboard-actions">
           <h2>Manufacturing totals</h2>
@@ -70,6 +114,6 @@
       </section>
     </main>
 
-    <script type="module" src="admin.js?v=20260903b"></script>
+    <script type="module" src="admin.js?v=20260903d"></script>
   </body>
 </html>

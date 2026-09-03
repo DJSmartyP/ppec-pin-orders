@@ -75,7 +75,8 @@ a {
 .summary-panel,
 .badge-card,
 .metric-card,
-.submission-card {
+.submission-card,
+.profit-panel {
   background:
     linear-gradient(180deg, rgba(255, 247, 231, 0.96), rgba(245, 231, 202, 0.95));
   border: 1px solid rgba(65, 37, 18, 0.28);
@@ -227,6 +228,12 @@ h3 {
   border: 1px solid rgba(65, 37, 18, 0.22);
   color: var(--purple-dark);
   padding: 10px 14px;
+}
+
+.compact-button {
+  min-height: 38px;
+  padding: 8px 11px;
+  font-size: 0.88rem;
 }
 
 .danger-button {
@@ -476,7 +483,8 @@ h3 {
 }
 
 .summary-totals div,
-.mini-table div {
+.mini-table div,
+.profit-result {
   background: var(--panel-strong);
   border-radius: 8px;
   padding: 12px;
@@ -484,7 +492,8 @@ h3 {
 
 .summary-totals dt,
 .metric-card span,
-.mini-table span {
+.mini-table span,
+.profit-result span {
   color: var(--muted);
   font-family: Arial, sans-serif;
   font-size: 0.86rem;
@@ -571,6 +580,145 @@ input[name="discordUsername"],
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.profit-panel {
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.section-note {
+  max-width: 680px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.profit-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.86fr) minmax(320px, 1.14fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.cost-input-grid,
+.profit-result-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.cost-input-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cost-field {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-family: Arial, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.cost-field:first-child,
+.cost-field:nth-child(2),
+.cost-field:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.cost-field input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fffaf0;
+  color: var(--ink);
+  font-family: Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.profit-result-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tier-card {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(65, 37, 18, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 250, 240, 0.64);
+}
+
+.tier-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tier-card h3 {
+  margin: 0;
+  color: var(--purple-dark);
+}
+
+.tier-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tier-row {
+  display: grid;
+  grid-template-columns: minmax(86px, 0.8fr) minmax(116px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.tier-row label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-family: Arial, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tier-row input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fffaf0;
+  color: var(--ink);
+  font-family: Arial, sans-serif;
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.profit-result {
+  border: 1px solid rgba(65, 37, 18, 0.1);
+}
+
+.profit-result strong {
+  display: block;
+  margin-top: 6px;
+  font-family: Arial, sans-serif;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.profit-result.good strong {
+  color: #176038;
+}
+
+.profit-result.bad strong {
+  color: #9d2416;
 }
 
 .metric-grid {
@@ -690,7 +838,8 @@ tfoot td {
 @media (max-width: 960px) {
   .interest-layout,
   .catalogue-grid,
-  .split-grid {
+  .split-grid,
+  .profit-layout {
     grid-template-columns: 1fr;
   }
 
@@ -733,7 +882,10 @@ tfoot td {
   }
 
   .metric-grid,
-  .summary-totals {
+  .summary-totals,
+  .cost-input-grid,
+  .profit-result-grid,
+  .tier-row {
     grid-template-columns: 1fr;
   }
 }
