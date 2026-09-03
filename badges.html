@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Choose PPEC Badges</title>
+    <meta name="description" content="Submit genuine interest in 2-inch PPEC acrylic and wooden badge designs.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="PPEC Badge Interest home">
+        <span class="brand-mark">PPEC</span>
+        <span>Badge Interest</span>
+      </a>
+      <a class="admin-link" href="admin.html">Admin</a>
+    </header>
+
+    <main class="app-shell">
+      <section class="page-title">
+        <p class="eyebrow">2-inch pins · £3 each</p>
+        <h1>Choose the badges you genuinely intend to buy</h1>
+        <p>This is still only an interest check. No payment is taken, and public users can submit again later if they need to send a revised response.</p>
+      </section>
+
+      <form id="interest-form" class="interest-layout">
+        <section class="catalogue-grid" id="catalogue" aria-label="Badge designs"></section>
+
+        <aside class="summary-panel" aria-labelledby="summary-title">
+          <h2 id="summary-title">Your interest</h2>
+          <dl class="summary-totals">
+            <div>
+              <dt>Total pins</dt>
+              <dd id="total-pins">0</dd>
+            </div>
+            <div>
+              <dt>Estimated spend</dt>
+              <dd id="estimated-spend">£0</dd>
+            </div>
+          </dl>
+
+          <label class="field-label" for="discord-username">Discord username</label>
+          <input id="discord-username" name="discordUsername" autocomplete="off" required maxlength="80" placeholder="Your Discord name">
+
+          <label class="confirm-row">
+            <input id="confirm-genuine" type="checkbox" required>
+            <span>I confirm these are quantities I genuinely intend to buy if the badges are produced. I understand this is not yet an order and no payment is being taken.</span>
+          </label>
+
+          <button class="primary-button" type="submit" id="submit-button">Submit interest</button>
+          <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+        </aside>
+      </form>
+    </main>
+
+    <script type="module" src="public-form.js"></script>
+  </body>
+</html>

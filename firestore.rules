@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in [
+          "your-admin-email@example.com"
+        ];
+    }
+
+    function quantityKeys() {
+      return [
+        "ppec_logo_acrylic",
+        "ppec_logo_wood",
+        "explorers_card_acrylic",
+        "explorers_card_wood",
+        "curiosity_acrylic",
+        "curiosity_wood",
+        "ppec_pride_logo_acrylic",
+        "ppec_pride_logo_wood"
+      ];
+    }
+
+    function isQuantity(value) {
+      return value is int && value >= 0 && value <= 99;
+    }
+
+    function q(key) {
+      return request.resource.data.quantities[key];
+    }
+
+    function calculatedTotalPins() {
+      return q("ppec_logo_acrylic")
+        + q("ppec_logo_wood")
+        + q("explorers_card_acrylic")
+        + q("explorers_card_wood")
+        + q("curiosity_acrylic")
+        + q("curiosity_wood")
+        + q("ppec_pride_logo_acrylic")
+        + q("ppec_pride_logo_wood");
+    }
+
+    function hasExpectedSubmissionShape() {
+      return request.resource.data.keys().hasOnly([
+          "discordUsername",
+          "quantities",
+          "totalPins",
+          "estimatedSpendPence",
+          "submittedAt"
+        ])
+        && request.resource.data.quantities is map
+        && request.resource.data.quantities.keys().hasAll(quantityKeys())
+        && request.resource.data.quantities.keys().hasOnly(quantityKeys());
+    }
+
+    function hasValidQuantities() {
+      return isQuantity(q("ppec_logo_acrylic"))
+        && isQuantity(q("ppec_logo_wood"))
+        && isQuantity(q("explorers_card_acrylic"))
+        && isQuantity(q("explorers_card_wood"))
+        && isQuantity(q("curiosity_acrylic"))
+        && isQuantity(q("curiosity_wood"))
+        && isQuantity(q("ppec_pride_logo_acrylic"))
+        && isQuantity(q("ppec_pride_logo_wood"));
+    }
+
+    function isValidSubmission() {
+      return hasExpectedSubmissionShape()
+        && hasValidQuantities()
+        && request.resource.data.discordUsername is string
+        && request.resource.data.discordUsername.size() >= 2
+        && request.resource.data.discordUsername.size() <= 80
+        && request.resource.data.totalPins is int
+        && request.resource.data.totalPins == calculatedTotalPins()
+        && request.resource.data.totalPins > 0
+        && request.resource.data.estimatedSpendPence is int
+        && request.resource.data.estimatedSpendPence == calculatedTotalPins() * 300
+        && request.resource.data.submittedAt == request.time;
+    }
+
+    match /interestSubmissions/{submissionId} {
+      allow create: if isValidSubmission();
+      allow get, list, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
