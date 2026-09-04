@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PPEC Badge Admin Submissions</title>
     <meta name="description" content="Individual PPEC badge interest submissions for the admin panel.">
-    <link rel="stylesheet" href="styles.css?v=20260904d">
+    <link rel="stylesheet" href="styles.css?v=20260904e">
   </head>
   <body>
     <header class="site-header">
@@ -26,7 +26,7 @@
       <section class="page-title">
         <p class="eyebrow">Private submissions</p>
         <h1>Individual submissions</h1>
-        <p>Review each response, export the current CSV, or delete bogus entries.</p>
+        <p>Open a Discord name to review the record, export the current CSV, or delete bogus entries.</p>
       </section>
 
       <section class="auth-panel" id="auth-panel">
@@ -40,10 +40,13 @@
           <h2>Responses</h2>
           <button class="secondary-button" id="export-csv" type="button">Export CSV</button>
         </div>
-        <div class="submission-list" id="submission-list"></div>
+        <div class="submission-browser">
+          <div class="submission-list" id="submission-list"></div>
+          <section class="submission-detail-panel" id="submission-detail" aria-live="polite"></section>
+        </div>
       </section>
     </main>
 
-    <script type="module" src="admin.js?v=20260904g"></script>
+    <script type="module" src="admin.js?v=20260904h"></script>
   </body>
 </html>

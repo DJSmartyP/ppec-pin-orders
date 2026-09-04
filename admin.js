@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904g";
-import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, kofiFeeRate, paypalFeeRate, paypalFixedFeePence, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904g";
+import { designs, materials, variants } from "./catalogue.js?v=20260904h";
+import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, kofiFeeRate, paypalFeeRate, paypalFixedFeePence, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904h";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -27,6 +27,7 @@ const aggregateFoot = document.querySelector("#aggregate-foot");
 const materialTotals = document.querySelector("#material-totals");
 const designTotals = document.querySelector("#design-totals");
 const submissionList = document.querySelector("#submission-list");
+const submissionDetail = document.querySelector("#submission-detail");
 const exportButton = document.querySelector("#export-csv");
 const profitResultGrid = document.querySelector("#profit-result-grid");
 const profitInputs = {
@@ -75,6 +76,7 @@ const hasProfitTools = Boolean(profitResultGrid && profitInputs.sellingPrice && 
 
 let submissions = [];
 let aggregates = createEmptyAggregates();
+let selectedSubmissionId = "";
 
 if (hasProfitTools) {
   initialiseProfitInputs();
@@ -132,23 +134,27 @@ if (exportButton) {
 
 if (submissionList) {
   submissionList.addEventListener("click", async (event) => {
+    const openButton = event.target.closest("button[data-open-id]");
+    if (openButton) {
+      selectedSubmissionId = openButton.dataset.openId;
+      renderSubmissionList();
+      submissionDetail?.querySelector(".submission-card")?.focus();
+      return;
+    }
+
     const button = event.target.closest("button[data-delete-id]");
     if (!button) return;
 
-    const submission = submissions.find((item) => item.id === button.dataset.deleteId);
-    const label = submission ? `${submission.discordUsername || "this submission"}` : "this submission";
+    await deleteSubmission(button);
+  });
+}
 
-    if (!window.confirm(`Delete the submission from ${label}? This cannot be undone.`)) return;
+if (submissionDetail) {
+  submissionDetail.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-delete-id]");
+    if (!button) return;
 
-    button.disabled = true;
-    try {
-      await deleteDoc(doc(db, collectionName, button.dataset.deleteId));
-      await loadSubmissions();
-    } catch (error) {
-      console.error(error);
-      showAuthMessage("That submission could not be deleted. Please try again.", "error");
-      button.disabled = false;
-    }
+    await deleteSubmission(button);
   });
 }
 
@@ -160,6 +166,9 @@ async function loadSubmissions() {
     submissions = snapshot.docs
       .map((item) => ({ id: item.id, ...item.data() }))
       .sort((a, b) => normaliseDate(b.submittedAt) - normaliseDate(a.submittedAt));
+    if (selectedSubmissionId && !submissions.some((submission) => submission.id === selectedSubmissionId)) {
+      selectedSubmissionId = "";
+    }
 
     aggregates = createEmptyAggregates();
     submissions.forEach(addSubmissionToAggregates);
@@ -237,26 +246,77 @@ function renderAdminPage() {
 function renderSubmissionList() {
   if (!submissions.length) {
     submissionList.innerHTML = `<p class="empty-state">No submissions yet.</p>`;
+    if (submissionDetail) {
+      submissionDetail.innerHTML = "";
+    }
     return;
   }
 
-  submissionList.innerHTML = submissions.map((submission) => {
-    const rows = variants
-      .filter((variant) => getQuantity(submission, variant.key) > 0)
-      .map((variant) => `<li>${variant.designName} · ${variant.materialName}: <strong>${getQuantity(submission, variant.key)}</strong></li>`)
-      .join("");
+  submissionList.innerHTML = submissions.map((submission) => `
+    <button class="submission-row ${submission.id === selectedSubmissionId ? "active" : ""}" type="button" data-open-id="${escapeHtml(submission.id)}" aria-pressed="${submission.id === selectedSubmissionId}">
+      <span>${escapeHtml(submission.discordUsername || "No Discord username")}</span>
+      <small>Open record</small>
+    </button>
+  `).join("");
 
-    return `
-      <article class="submission-card">
-        <div>
-          <h3>${escapeHtml(submission.discordUsername || "No Discord username")}</h3>
-          <p>${formatDate(submission.submittedAt)} · ${submission.totalPins || 0} pins · ${formatPounds((submission.estimatedSpendPence || 0))} badge estimate · ${formatPounds(plannedPostagePence)} postage charged</p>
-          <ul>${rows || "<li>No quantities recorded</li>"}</ul>
+  if (submissionDetail) {
+    submissionDetail.innerHTML = selectedSubmissionId
+      ? renderSubmissionDetail(submissions.find((submission) => submission.id === selectedSubmissionId))
+      : `<p class="empty-state">Select a Discord name to view the full record.</p>`;
+  }
+}
+
+function renderSubmissionDetail(submission) {
+  if (!submission) {
+    return `<p class="empty-state">That submission could not be found.</p>`;
+  }
+
+  const rows = variants
+    .filter((variant) => getQuantity(submission, variant.key) > 0)
+    .map((variant) => `<li>${variant.designName} · ${variant.materialName}: <strong>${getQuantity(submission, variant.key)}</strong></li>`)
+    .join("");
+
+  return `
+    <article class="submission-card" tabindex="-1">
+      <div>
+        <div class="submission-card-head">
+          <div>
+            <p class="eyebrow">Open record</p>
+            <h3>${escapeHtml(submission.discordUsername || "No Discord username")}</h3>
+          </div>
+          <button class="danger-button" type="button" data-delete-id="${escapeHtml(submission.id)}">Delete</button>
         </div>
-        <button class="danger-button" type="button" data-delete-id="${submission.id}">Delete</button>
-      </article>
-    `;
-  }).join("");
+        <dl class="submission-facts">
+          <div><dt>Submitted</dt><dd>${formatDate(submission.submittedAt)}</dd></div>
+          <div><dt>Total pins</dt><dd>${submission.totalPins || 0}</dd></div>
+          <div><dt>Badge estimate</dt><dd>${formatPounds(submission.estimatedSpendPence || 0)}</dd></div>
+          <div><dt>Postage charged</dt><dd>${formatPounds(plannedPostagePence)}</dd></div>
+        </dl>
+        <h4>Quantities</h4>
+        <ul>${rows || "<li>No quantities recorded</li>"}</ul>
+      </div>
+    </article>
+  `;
+}
+
+async function deleteSubmission(button) {
+  const submission = submissions.find((item) => item.id === button.dataset.deleteId);
+  const label = submission ? `${submission.discordUsername || "this submission"}` : "this submission";
+
+  if (!window.confirm(`Delete the submission from ${label}? This cannot be undone.`)) return;
+
+  button.disabled = true;
+  try {
+    await deleteDoc(doc(db, collectionName, button.dataset.deleteId));
+    if (selectedSubmissionId === button.dataset.deleteId) {
+      selectedSubmissionId = "";
+    }
+    await loadSubmissions();
+  } catch (error) {
+    console.error(error);
+    showAuthMessage("That submission could not be deleted. Please try again.", "error");
+    button.disabled = false;
+  }
 }
 
 function initialiseProfitInputs() {

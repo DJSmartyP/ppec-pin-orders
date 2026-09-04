@@ -20,7 +20,7 @@ The public form does not authenticate users and deliberately does not deduplicat
 - Firebase Firestore submission storage.
 - Firebase Authentication only for the admin dashboard.
 - Admin dashboard split into dashboard, calculations, and submissions pages.
-- Admin dashboard with aggregate totals, material/design totals, individual submissions, bogus submission deletion, profit estimates, and CSV export.
+- Admin dashboard with aggregate totals, material/design totals, click-through individual submission records, bogus submission deletion, profit estimates, and CSV export.
 - Firestore security rules for public create-only access and admin read/list/delete access.
 
 ## Files
