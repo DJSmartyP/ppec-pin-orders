@@ -41,6 +41,7 @@ firestore.rules             Firestore security rules
 firebase.json               Firebase rules deployment config
 assets/images/products/     Replaceable final badge artwork
 assets/images/mockups/      Temporary split wood/acrylic rollover mock-ups
+assets/images/optimised/    Lightweight WebP display images used by the live pages
 assets/images/reference/    Temporary/reference product photos
 ```
 
@@ -81,16 +82,18 @@ You can also paste the contents of `firestore.rules` into the Firebase Console r
 
 ## Replacing Badge Artwork
 
-The public form uses the temporary split-finish mock-ups in `assets/images/mockups/` as the main badge images. The original artwork appears on hover/focus and lives at:
+The public form uses lightweight WebP copies in `assets/images/optimised/` for speed. The temporary split-finish mock-ups in `assets/images/mockups/` and the original artwork in `assets/images/products/` are kept as replaceable source files.
+
+The original artwork lives at:
 
 - `assets/images/products/ppec-logo.png`
 - `assets/images/products/explorers-card.png`
 - `assets/images/products/curiosity.png`
 - `assets/images/products/ppec-pride-logo.png`
 
-Replace those files with final artwork later, keeping the same filenames. If you rename the files, update `catalogue.js`.
+Replace those files with final artwork later, keeping the same filenames. If you rename the files, update `catalogue.js` and regenerate the matching WebP files in `assets/images/optimised/`.
 
-Replace the mock-up files later if you get better product renders, keeping the same filenames.
+Replace the mock-up files later if you get better product renders, keeping the same filenames, then regenerate the matching optimised WebP files.
 
 ## Data Model
 

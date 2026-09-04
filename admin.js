@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904h";
-import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, kofiFeeRate, paypalFeeRate, paypalFixedFeePence, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904h";
+import { designs, materials, variants } from "./catalogue.js?v=20260904i";
+import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, kofiFeeRate, paypalFeeRate, paypalFixedFeePence, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904i";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,

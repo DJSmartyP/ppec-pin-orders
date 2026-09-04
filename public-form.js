@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904d";
-import { collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904d";
+import { designs, materials, variants } from "./catalogue.js?v=20260904i";
+import { collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904i";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   addDoc,
