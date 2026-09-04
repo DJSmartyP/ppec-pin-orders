@@ -328,9 +328,13 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  align-items: stretch;
 }
 
 .badge-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
   overflow: hidden;
   position: relative;
   transition: transform 180ms ease, box-shadow 180ms ease;
@@ -460,8 +464,13 @@ h3 {
 
 .badge-card-body {
   padding: 18px 18px 20px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
+}
+
+.badge-card-body > div:first-child {
+  min-height: 126px;
 }
 
 .badge-card h2 {
@@ -478,6 +487,7 @@ h3 {
 .quantity-group {
   display: grid;
   gap: 12px;
+  margin-top: auto;
 }
 
 .quantity-row {
@@ -967,6 +977,10 @@ tfoot td {
     gap: 14px;
   }
 
+  .badge-card-body > div:first-child {
+    min-height: 136px;
+  }
+
   .badge-card h2 {
     font-size: 1.05rem;
   }
@@ -1046,6 +1060,10 @@ tfoot td {
     gap: 10px;
   }
 
+  .badge-card-body > div:first-child {
+    min-height: 118px;
+  }
+
   .badge-card h2 {
     font-size: 0.95rem;
   }
@@ -1120,5 +1138,9 @@ tfoot td {
 @media (max-width: 560px) and (orientation: portrait) {
   .catalogue-grid {
     grid-template-columns: 1fr;
+  }
+
+  .badge-card-body > div:first-child {
+    min-height: auto;
   }
 }
