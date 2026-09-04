@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260903i";
-import { collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903i";
+import { designs, materials, variants } from "./catalogue.js?v=20260903k";
+import { collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260903k";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   addDoc,
@@ -24,6 +24,7 @@ const configured = isFirebaseConfigured();
 const db = configured ? getFirestore(initializeApp(firebaseConfig)) : null;
 
 renderCatalogue();
+renderPostageNote();
 updateSummary();
 
 if (!configured) {
@@ -154,6 +155,13 @@ function updateSummary() {
   const totalPins = calculateTotalPins();
   totalPinsEl.textContent = totalPins;
   estimatedSpendEl.textContent = formatPounds(totalPins * unitPricePence);
+}
+
+function renderPostageNote() {
+  const postageEl = document.querySelector("#planned-postage");
+  if (postageEl) {
+    postageEl.textContent = `${formatPounds(plannedPostagePence)} per order`;
+  }
 }
 
 function calculateTotalPins() {

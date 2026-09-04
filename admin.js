@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260903i";
-import { adminEmails, collectionName, firebaseConfig, unitPricePence } from "./firebase-config.js?v=20260903i";
+import { designs, materials, variants } from "./catalogue.js?v=20260903k";
+import { adminEmails, collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260903k";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -30,6 +30,7 @@ const exportButton = document.querySelector("#export-csv");
 const profitResultGrid = document.querySelector("#profit-result-grid");
 const profitInputs = {
   sellingPrice: document.querySelector("#profit-selling-price"),
+  postagePrice: document.querySelector("#profit-postage-price"),
   usdRate: document.querySelector("#profit-usd-rate"),
   vograceShipping: document.querySelector("#profit-vograce-shipping"),
   fixedCosts: document.querySelector("#profit-fixed-costs"),
@@ -68,11 +69,14 @@ const configured = isFirebaseConfigured();
 const app = configured ? initializeApp(firebaseConfig) : null;
 const auth = configured ? getAuth(app) : null;
 const db = configured ? getFirestore(app) : null;
+const hasProfitTools = Boolean(profitResultGrid && profitInputs.sellingPrice && profitInputs.postagePrice);
 
 let submissions = [];
 let aggregates = createEmptyAggregates();
 
-initialiseProfitInputs();
+if (hasProfitTools) {
+  initialiseProfitInputs();
+}
 
 if (!configured) {
   signInButton.disabled = true;
@@ -111,36 +115,40 @@ if (!configured) {
   });
 }
 
-exportButton.addEventListener("click", () => {
-  const csv = buildCsv();
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `ppec-badge-interest-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-});
+if (exportButton) {
+  exportButton.addEventListener("click", () => {
+    const csv = buildCsv();
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ppec-badge-interest-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+}
 
-submissionList.addEventListener("click", async (event) => {
-  const button = event.target.closest("button[data-delete-id]");
-  if (!button) return;
+if (submissionList) {
+  submissionList.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-delete-id]");
+    if (!button) return;
 
-  const submission = submissions.find((item) => item.id === button.dataset.deleteId);
-  const label = submission ? `${submission.discordUsername || "this submission"}` : "this submission";
+    const submission = submissions.find((item) => item.id === button.dataset.deleteId);
+    const label = submission ? `${submission.discordUsername || "this submission"}` : "this submission";
 
-  if (!window.confirm(`Delete the submission from ${label}? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete the submission from ${label}? This cannot be undone.`)) return;
 
-  button.disabled = true;
-  try {
-    await deleteDoc(doc(db, collectionName, button.dataset.deleteId));
-    await loadSubmissions();
-  } catch (error) {
-    console.error(error);
-    showAuthMessage("That submission could not be deleted. Please try again.", "error");
-    button.disabled = false;
-  }
-});
+    button.disabled = true;
+    try {
+      await deleteDoc(doc(db, collectionName, button.dataset.deleteId));
+      await loadSubmissions();
+    } catch (error) {
+      console.error(error);
+      showAuthMessage("That submission could not be deleted. Please try again.", "error");
+      button.disabled = false;
+    }
+  });
+}
 
 async function loadSubmissions() {
   showAuthMessage("Loading submissions...", "");
@@ -153,7 +161,7 @@ async function loadSubmissions() {
 
     aggregates = createEmptyAggregates();
     submissions.forEach(addSubmissionToAggregates);
-    renderDashboard();
+    renderAdminPage();
     showAuthMessage(`${submissions.length} submission${submissions.length === 1 ? "" : "s"} loaded.`, "success");
   } catch (error) {
     console.error(error);
@@ -161,50 +169,66 @@ async function loadSubmissions() {
   }
 }
 
-function renderDashboard() {
-  const totalPins = variants.reduce((sum, variant) => sum + aggregates.byVariant[variant.key], 0);
-  const acrylicTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_acrylic`], 0);
-  const woodTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_wood`], 0);
-  renderProfitEstimate({ acrylicTotal, woodTotal, totalPins });
+function renderAdminPage() {
+  const totals = calculateTotals();
 
-  metricGrid.innerHTML = [
-    metric("Submissions", submissions.length),
-    metric("Total pins", totalPins),
-    metric("Estimated sales", formatPounds(totalPins * unitPricePence)),
-    metric("Acrylic / Wood", `${acrylicTotal} / ${woodTotal}`)
-  ].join("");
+  if (hasProfitTools) {
+    renderProfitEstimate(totals);
+  }
 
-  aggregateBody.innerHTML = designs.map((design) => {
-    const acrylic = aggregates.byVariant[`${design.id}_acrylic`];
-    const wood = aggregates.byVariant[`${design.id}_wood`];
-    return `
+  if (metricGrid) {
+    metricGrid.innerHTML = [
+      metric("Submissions", submissions.length),
+      metric("Total pins", totals.totalPins),
+      metric("Estimated badge sales", formatPounds(totals.totalPins * unitPricePence)),
+      metric("Planned postage", formatPounds(submissions.length * plannedPostagePence)),
+      metric("Acrylic / Wood", `${totals.acrylicTotal} / ${totals.woodTotal}`)
+    ].join("");
+  }
+
+  if (aggregateBody && aggregateFoot) {
+    aggregateBody.innerHTML = designs.map((design) => {
+      const acrylic = aggregates.byVariant[`${design.id}_acrylic`];
+      const wood = aggregates.byVariant[`${design.id}_wood`];
+      return `
+        <tr>
+          <th scope="row">${design.name}</th>
+          <td>${acrylic}</td>
+          <td>${wood}</td>
+          <td>${acrylic + wood}</td>
+        </tr>
+      `;
+    }).join("");
+
+    aggregateFoot.innerHTML = `
       <tr>
-        <th scope="row">${design.name}</th>
-        <td>${acrylic}</td>
-        <td>${wood}</td>
-        <td>${acrylic + wood}</td>
+        <th scope="row">Total</th>
+        <td>${totals.acrylicTotal}</td>
+        <td>${totals.woodTotal}</td>
+        <td>${totals.totalPins}</td>
       </tr>
     `;
-  }).join("");
+  }
 
-  aggregateFoot.innerHTML = `
-    <tr>
-      <th scope="row">Total</th>
-      <td>${acrylicTotal}</td>
-      <td>${woodTotal}</td>
-      <td>${totalPins}</td>
-    </tr>
-  `;
+  if (materialTotals) {
+    materialTotals.innerHTML = materials.map((material) => {
+      const total = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_${material.id}`], 0);
+      return `<div><span>${material.label}</span><strong>${total}</strong></div>`;
+    }).join("");
+  }
 
-  materialTotals.innerHTML = materials.map((material) => {
-    const total = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_${material.id}`], 0);
-    return `<div><span>${material.label}</span><strong>${total}</strong></div>`;
-  }).join("");
+  if (designTotals) {
+    designTotals.innerHTML = designs.map((design) => {
+      return `<div><span>${design.name}</span><strong>${aggregates.byDesign[design.id]}</strong></div>`;
+    }).join("");
+  }
 
-  designTotals.innerHTML = designs.map((design) => {
-    return `<div><span>${design.name}</span><strong>${aggregates.byDesign[design.id]}</strong></div>`;
-  }).join("");
+  if (submissionList) {
+    renderSubmissionList();
+  }
+}
 
+function renderSubmissionList() {
   if (!submissions.length) {
     submissionList.innerHTML = `<p class="empty-state">No submissions yet.</p>`;
     return;
@@ -220,7 +244,7 @@ function renderDashboard() {
       <article class="submission-card">
         <div>
           <h3>${escapeHtml(submission.discordUsername || "No Discord username")}</h3>
-          <p>${formatDate(submission.submittedAt)} · ${submission.totalPins || 0} pins · ${formatPounds((submission.estimatedSpendPence || 0))}</p>
+          <p>${formatDate(submission.submittedAt)} · ${submission.totalPins || 0} pins · ${formatPounds((submission.estimatedSpendPence || 0))} badge estimate · ${formatPounds(plannedPostagePence)} planned postage</p>
           <ul>${rows || "<li>No quantities recorded</li>"}</ul>
         </div>
         <button class="danger-button" type="button" data-delete-id="${submission.id}">Delete</button>
@@ -232,6 +256,7 @@ function renderDashboard() {
 function initialiseProfitInputs() {
   const savedValues = readProfitInputs();
   profitInputs.sellingPrice.value = savedValues.sellingPrice || formatInputPounds(unitPricePence);
+  profitInputs.postagePrice.value = savedValues.postagePrice || formatInputPounds(plannedPostagePence);
   profitInputs.usdRate.value = savedValues.usdRate || "0.7402";
   profitInputs.vograceShipping.value = savedValues.vograceShipping || "20.00";
   profitInputs.fixedCosts.value = savedValues.fixedCosts || "";
@@ -239,17 +264,19 @@ function initialiseProfitInputs() {
   renderTierInputs("acrylic", savedValues.tiers?.acrylic || defaultTiers("acrylic", savedValues.acrylicCost));
   renderTierInputs("wood", savedValues.tiers?.wood || defaultTiers("wood", savedValues.woodCost));
 
-  Object.values(profitInputs).forEach((input) => {
+  Object.values(profitInputs).filter(Boolean).forEach((input) => {
     input.addEventListener("input", () => {
       saveProfitInputs();
-      renderDashboard();
+      renderAdminPage();
     });
   });
 
   Object.entries(tierLists).forEach(([material, list]) => {
+    if (!list) return;
+
     list.addEventListener("input", () => {
       saveProfitInputs();
-      renderDashboard();
+      renderAdminPage();
     });
 
     list.addEventListener("click", (event) => {
@@ -263,21 +290,22 @@ function initialiseProfitInputs() {
       tiers.splice(Number(button.dataset.removeTier), 1);
       renderTierInputs(material, tiers);
       saveProfitInputs();
-      renderDashboard();
+      renderAdminPage();
     });
 
-    addTierButtons[material].addEventListener("click", () => {
+    addTierButtons[material]?.addEventListener("click", () => {
       const tiers = readTiersFromDom(material);
       tiers.push({ minQty: nextTierQuantity(tiers), cost: "" });
       renderTierInputs(material, tiers);
       saveProfitInputs();
-      renderDashboard();
+      renderAdminPage();
     });
   });
 }
 
 function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
   const sellingPricePence = poundsInputToPence(profitInputs.sellingPrice.value || formatInputPounds(unitPricePence));
+  const postagePricePence = poundsInputToPence(profitInputs.postagePrice.value || formatInputPounds(plannedPostagePence));
   const usdToGbpRate = numberInput(profitInputs.usdRate.value || "0.7402");
   const acrylicTier = tierForQuantity("acrylic", acrylicTotal);
   const woodTier = tierForQuantity("wood", woodTotal);
@@ -285,7 +313,9 @@ function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
   const fixedCostsPence = poundsInputToPence(profitInputs.fixedCosts.value);
   const percentCostRate = numberInput(profitInputs.percentCost.value) / 100;
 
-  const revenuePence = totalPins * sellingPricePence;
+  const badgeRevenuePence = totalPins * sellingPricePence;
+  const plannedPostageRevenuePence = submissions.length * postagePricePence;
+  const revenuePence = badgeRevenuePence + plannedPostageRevenuePence;
   const productCostUsdCents = (acrylicTotal * acrylicTier.costCents) + (woodTotal * woodTier.costCents);
   const vograceTotalUsdCents = productCostUsdCents + vograceShippingCents;
   const productCostPence = Math.round(productCostUsdCents * usdToGbpRate);
@@ -301,7 +331,9 @@ function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
     : fixedCostsPence > 0 ? "Not covered" : 0;
 
   profitResultGrid.innerHTML = [
-    profitMetric("Estimated revenue", formatPounds(revenuePence)),
+    profitMetric("Badge revenue", formatPounds(badgeRevenuePence)),
+    profitMetric("Planned postage charged", formatPounds(plannedPostageRevenuePence)),
+    profitMetric("Total estimated revenue", formatPounds(revenuePence)),
     profitMetric("Vograce product cost", formatDollars(productCostUsdCents)),
     profitMetric("Vograce total with shipping", formatDollars(vograceTotalUsdCents)),
     profitMetric("Estimated Vograce cost", formatPounds(productCostPence + vograceShippingPence)),
@@ -312,6 +344,13 @@ function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
     profitMetric("Acrylic tier used", tierLabel(acrylicTier, acrylicTotal)),
     profitMetric("Wood tier used", tierLabel(woodTier, woodTotal))
   ].join("");
+}
+
+function calculateTotals() {
+  const totalPins = variants.reduce((sum, variant) => sum + aggregates.byVariant[variant.key], 0);
+  const acrylicTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_acrylic`], 0);
+  const woodTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_wood`], 0);
+  return { acrylicTotal, totalPins, woodTotal };
 }
 
 function profitMetric(label, value, tone = "") {
@@ -326,6 +365,7 @@ function profitMetric(label, value, tone = "") {
 function saveProfitInputs() {
   localStorage.setItem("ppecProfitInputs", JSON.stringify({
     sellingPrice: profitInputs.sellingPrice.value,
+    postagePrice: profitInputs.postagePrice.value,
     usdRate: profitInputs.usdRate.value,
     vograceShipping: profitInputs.vograceShipping.value,
     fixedCosts: profitInputs.fixedCosts.value,
@@ -346,6 +386,8 @@ function readProfitInputs() {
 }
 
 function renderTierInputs(material, tiers) {
+  if (!tierLists[material]) return;
+
   const normalisedTiers = normaliseTiers(tiers);
   tierLists[material].innerHTML = normalisedTiers.map((tier, index) => `
     <div class="tier-row">
@@ -363,6 +405,8 @@ function renderTierInputs(material, tiers) {
 }
 
 function readTiersFromDom(material) {
+  if (!tierLists[material]) return defaultTiers(material);
+
   const rows = [...tierLists[material].querySelectorAll(".tier-row")];
   return normaliseTiers(rows.map((row) => ({
     minQty: row.querySelector("[data-tier-min]").value,
@@ -439,7 +483,8 @@ function buildCsv() {
     "Discord username",
     ...variants.map((variant) => `${variant.designName} ${variant.materialName}`),
     "Total pins",
-    "Estimated spend"
+    "Estimated badge spend",
+    "Planned postage"
   ].map(csvCell).join(","));
 
   submissions.forEach((submission) => {
@@ -449,7 +494,8 @@ function buildCsv() {
       submission.discordUsername || "",
       ...variants.map((variant) => getQuantity(submission, variant.key)),
       submission.totalPins || 0,
-      formatPounds(submission.estimatedSpendPence || 0)
+      formatPounds(submission.estimatedSpendPence || 0),
+      formatPounds(plannedPostagePence)
     ].map(csvCell).join(","));
   });
 

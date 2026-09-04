@@ -9,13 +9,15 @@ The public form does not authenticate users and deliberately does not deduplicat
 - Separate intro page explaining that the form is for information and planning only.
 - Four badge designs, each available as acrylic or wood.
 - 2-inch pins priced at £3 each.
+- Planned postage shown as £2 per order.
 - Independent quantity controls for all eight design/material variants.
 - Discord username field.
 - Live total pins and estimated spend.
 - Explicit confirmation checkbox before submission.
 - Firebase Firestore submission storage.
 - Firebase Authentication only for the admin dashboard.
-- Admin dashboard with aggregate totals, material/design totals, individual submissions, bogus submission deletion, and CSV export.
+- Admin dashboard split into dashboard, calculations, and submissions pages.
+- Admin dashboard with aggregate totals, material/design totals, individual submissions, bogus submission deletion, profit estimates, and CSV export.
 - Firestore security rules for public create-only access and admin read/list/delete access.
 
 ## Files
@@ -23,15 +25,19 @@ The public form does not authenticate users and deliberately does not deduplicat
 ```text
 index.html                  Intro/planning notice
 badges.html                 Public interest form
-admin.html                  Admin dashboard
+thanks.html                 Post-submission thank-you page
+admin.html                  Admin dashboard totals
+admin-calculations.html     Admin cost and profit calculator
+admin-submissions.html      Admin individual submissions and CSV export
 styles.css                  Shared styling
 catalogue.js                Badge catalogue and variant definitions
 public-form.js              Public form behaviour and Firestore create
-admin.js                    Admin sign-in, dashboard, delete, CSV export
-firebase-config.js          Placeholder Firebase config and admin email list
+admin.js                    Shared admin sign-in, dashboard, calculations, delete and CSV export behaviour
+firebase-config.js          Firebase config, admin email list and shared pricing settings
 firestore.rules             Firestore security rules
 firebase.json               Firebase rules deployment config
 assets/images/products/     Replaceable final badge artwork
+assets/images/mockups/      Temporary split wood/acrylic rollover mock-ups
 assets/images/reference/    Temporary/reference product photos
 ```
 
@@ -80,6 +86,8 @@ The public form uses:
 - `assets/images/products/ppec-pride-logo.png`
 
 Replace those files with final artwork later, keeping the same filenames. If you rename the files, update `catalogue.js`.
+
+The rollover state uses temporary split-finish mock-ups in `assets/images/mockups/`. Replace those later if you get better product renders, keeping the same filenames.
 
 ## Data Model
 

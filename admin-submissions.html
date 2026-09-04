@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PPEC Badge Admin</title>
-    <meta name="description" content="Admin dashboard for PPEC badge interest submissions.">
+    <title>PPEC Badge Admin Submissions</title>
+    <meta name="description" content="Individual PPEC badge interest submissions for the admin panel.">
     <link rel="stylesheet" href="styles.css?v=20260903k">
   </head>
   <body>
@@ -18,15 +18,15 @@
 
     <main class="app-shell admin-shell">
       <nav class="admin-tabs" aria-label="Admin sections">
-        <a class="active" href="admin.html">Dashboard</a>
+        <a href="admin.html">Dashboard</a>
         <a href="admin-calculations.html">Calculations</a>
-        <a href="admin-submissions.html">Submissions</a>
+        <a class="active" href="admin-submissions.html">Submissions</a>
       </nav>
 
       <section class="page-title">
-        <p class="eyebrow">Private dashboard</p>
-        <h1>Badge production totals</h1>
-        <p>Sign in with the authorised Firebase admin account to view the production totals and export the CSV.</p>
+        <p class="eyebrow">Private submissions</p>
+        <h1>Individual submissions</h1>
+        <p>Review each response, export the current CSV, or delete bogus entries.</p>
       </section>
 
       <section class="auth-panel" id="auth-panel">
@@ -35,39 +35,12 @@
         <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
       </section>
 
-      <section class="dashboard hidden" id="dashboard" aria-label="Admin dashboard">
-        <div class="metric-grid" id="metric-grid"></div>
-
+      <section class="dashboard hidden" id="dashboard" aria-label="Individual submissions">
         <div class="dashboard-actions">
-          <h2>Manufacturing totals</h2>
+          <h2>Responses</h2>
           <button class="secondary-button" id="export-csv" type="button">Export CSV</button>
         </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Design</th>
-                <th scope="col">Acrylic</th>
-                <th scope="col">Wood</th>
-                <th scope="col">Total</th>
-              </tr>
-            </thead>
-            <tbody id="aggregate-body"></tbody>
-            <tfoot id="aggregate-foot"></tfoot>
-          </table>
-        </div>
-
-        <section class="split-grid">
-          <div>
-            <h2>Totals by material</h2>
-            <div class="mini-table" id="material-totals"></div>
-          </div>
-          <div>
-            <h2>Totals by design</h2>
-            <div class="mini-table" id="design-totals"></div>
-          </div>
-        </section>
+        <div class="submission-list" id="submission-list"></div>
       </section>
     </main>
 

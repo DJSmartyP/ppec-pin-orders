@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PPEC Badge Admin Calculations</title>
+    <meta name="description" content="Profit and cost calculations for PPEC badge interest submissions.">
+    <link rel="stylesheet" href="styles.css?v=20260903k">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="PPEC Badge Interest home">
+        <span class="brand-mark"><img src="assets/images/products/ppec-logo.png" alt=""></span>
+        <span>Badge Admin</span>
+      </a>
+      <a class="admin-link" href="badges.html">Public form</a>
+    </header>
+
+    <main class="app-shell admin-shell">
+      <nav class="admin-tabs" aria-label="Admin sections">
+        <a href="admin.html">Dashboard</a>
+        <a class="active" href="admin-calculations.html">Calculations</a>
+        <a href="admin-submissions.html">Submissions</a>
+      </nav>
+
+      <section class="page-title">
+        <p class="eyebrow">Private calculator</p>
+        <h1>Costs and profit estimate</h1>
+        <p>Adjust Vograce pricing, exchange rate, postage and extra costs to estimate the likely profit from the current badge interest.</p>
+      </section>
+
+      <section class="auth-panel" id="auth-panel">
+        <button class="primary-button" id="sign-in-button" type="button">Sign in with Google</button>
+        <button class="secondary-button hidden" id="sign-out-button" type="button">Sign out</button>
+        <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="dashboard hidden" id="dashboard" aria-label="Admin calculations">
+        <section class="profit-panel" aria-labelledby="profit-title">
+          <div class="dashboard-actions">
+            <div>
+              <h2 id="profit-title">Profit estimate</h2>
+              <p class="section-note">Vograce costs are in US dollars. Badge sales, planned postage and local costs are estimated in pounds. These settings stay in this browser and are not shown publicly.</p>
+            </div>
+          </div>
+
+          <div class="profit-layout">
+            <div class="cost-input-grid">
+              <label class="cost-field" for="profit-selling-price">
+                Selling price per pin (£)
+                <input id="profit-selling-price" type="number" min="0" step="0.01" inputmode="decimal">
+              </label>
+              <label class="cost-field" for="profit-postage-price">
+                Planned postage per order (£)
+                <input id="profit-postage-price" type="number" min="0" step="0.01" inputmode="decimal">
+              </label>
+              <label class="cost-field" for="profit-usd-rate">
+                USD to GBP rate
+                <input id="profit-usd-rate" type="number" min="0" step="0.0001" inputmode="decimal">
+              </label>
+              <label class="cost-field" for="profit-vograce-shipping">
+                Vograce shipping ($)
+                <input id="profit-vograce-shipping" type="number" min="0" step="0.01" inputmode="decimal">
+              </label>
+              <label class="cost-field" for="profit-fixed-costs">
+                Setup, packing and other fixed costs (£)
+                <input id="profit-fixed-costs" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+              </label>
+              <label class="cost-field" for="profit-percent-cost">
+                Payment, packing or buffer (%)
+                <input id="profit-percent-cost" type="number" min="0" step="0.1" inputmode="decimal" placeholder="0">
+              </label>
+
+              <section class="tier-card" aria-labelledby="acrylic-tier-title">
+                <div class="tier-card-head">
+                  <h3 id="acrylic-tier-title">Acrylic Vograce tiers</h3>
+                  <button class="secondary-button compact-button" id="add-acrylic-tier" type="button">Add tier</button>
+                </div>
+                <div class="tier-list" id="acrylic-tier-list"></div>
+              </section>
+
+              <section class="tier-card" aria-labelledby="wood-tier-title">
+                <div class="tier-card-head">
+                  <h3 id="wood-tier-title">Wood Vograce tiers</h3>
+                  <button class="secondary-button compact-button" id="add-wood-tier" type="button">Add tier</button>
+                </div>
+                <div class="tier-list" id="wood-tier-list"></div>
+              </section>
+            </div>
+
+            <div class="profit-result-grid" id="profit-result-grid" aria-live="polite"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="admin.js?v=20260903k"></script>
+  </body>
+</html>

@@ -349,7 +349,7 @@ h3 {
   aspect-ratio: 1 / 0.86;
   display: grid;
   place-items: center;
-  min-height: 270px;
+  min-height: 240px;
   padding: 28px;
   border-bottom: 1px solid var(--line);
   position: relative;
@@ -567,6 +567,22 @@ h3 {
   font-weight: 900;
 }
 
+.postage-note {
+  margin: -2px 0 16px;
+  padding: 10px 12px;
+  border: 1px solid rgba(185, 131, 47, 0.32);
+  border-radius: 8px;
+  background: rgba(255, 250, 240, 0.76);
+  color: var(--muted);
+  font-family: var(--body-font);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.postage-note strong {
+  color: var(--purple-dark);
+}
+
 .field-label {
   display: block;
   margin-bottom: 8px;
@@ -630,6 +646,38 @@ input[name="discordUsername"],
 
 .admin-shell h2 {
   margin-top: 0;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.admin-tabs a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid rgba(65, 37, 18, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 247, 231, 0.76);
+  color: var(--purple-dark);
+  font-family: var(--body-font);
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgba(36, 23, 14, 0.08);
+}
+
+.admin-tabs a:hover,
+.admin-tabs a:focus-visible,
+.admin-tabs a.active {
+  background: linear-gradient(180deg, var(--purple), var(--purple-dark));
+  border-color: rgba(75, 6, 111, 0.68);
+  color: #fff7e7;
 }
 
 .auth-panel {
@@ -776,7 +824,7 @@ input[name="discordUsername"],
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 14px;
   margin-bottom: 24px;
 }
@@ -888,12 +936,59 @@ tfoot td {
   font-family: var(--body-font);
 }
 
+@media (min-width: 1180px) {
+  .catalogue-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .badge-image-wrap {
+    min-height: 170px;
+    padding: 18px;
+  }
+
+  .badge-art {
+    inset: 16px;
+    width: calc(100% - 32px);
+    height: calc(100% - 32px);
+  }
+
+  .badge-card-body {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .badge-card h2 {
+    font-size: 1.05rem;
+  }
+
+  .badge-card p {
+    font-size: 0.88rem;
+  }
+
+  .quantity-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .material-label {
+    font-size: 0.82rem;
+  }
+
+  .stepper {
+    width: 100%;
+  }
+}
+
 @media (max-width: 960px) {
   .interest-layout,
-  .catalogue-grid,
   .split-grid,
   .profit-layout {
     grid-template-columns: 1fr;
+  }
+
+  .catalogue-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .summary-panel {
@@ -902,6 +997,76 @@ tfoot td {
 
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (orientation: landscape) and (max-width: 960px) and (max-height: 620px) {
+  .catalogue-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .badge-image-wrap {
+    min-height: 130px;
+    padding: 12px;
+  }
+
+  .badge-art {
+    inset: 10px;
+    width: calc(100% - 20px);
+    height: calc(100% - 20px);
+  }
+
+  .finish-tag {
+    top: 8px;
+    min-width: auto;
+    padding: 5px 7px;
+    font-size: 0.58rem;
+  }
+
+  .wood-tag {
+    left: 8px;
+  }
+
+  .acrylic-tag {
+    right: 8px;
+  }
+
+  .badge-card-body {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .badge-card h2 {
+    font-size: 0.95rem;
+  }
+
+  .badge-card p {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .badge-meta {
+    margin-top: 6px;
+  }
+
+  .quantity-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .material-label {
+    font-size: 0.75rem;
+  }
+
+  .stepper {
+    width: 100%;
+  }
+
+  .stepper button,
+  .stepper input {
+    min-height: 34px;
   }
 }
 
@@ -939,6 +1104,12 @@ tfoot td {
   .cost-input-grid,
   .profit-result-grid,
   .tier-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) and (orientation: portrait) {
+  .catalogue-grid {
     grid-template-columns: 1fr;
   }
 }
