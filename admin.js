@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904f";
-import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, kofiFeeRate, paypalFeeRate, paypalFixedFeePence, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904f";
+import { designs, materials, variants } from "./catalogue.js?v=20260904g";
+import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, kofiFeeRate, paypalFeeRate, paypalFixedFeePence, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904g";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -635,7 +635,8 @@ function formatPounds(pence) {
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "GBP",
-    maximumFractionDigits: 0
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(pence / 100);
 }
 

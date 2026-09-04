@@ -12,6 +12,7 @@ The public form does not authenticate users and deliberately does not deduplicat
 - Planned postage shown as £2 per order.
 - Admin profit estimate treats postage as £2 charged and £1.55 estimated cost per order.
 - Admin profit estimate includes Ko-fi at 5% per order and PayPal at 30p plus 2.9% per order, calculated against badges plus planned postage.
+- Admin money figures show pounds and pence, rather than rounding to whole pounds.
 - Independent quantity controls for all eight design/material variants.
 - Discord username field.
 - Live total pins and estimated spend.
