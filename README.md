@@ -10,6 +10,7 @@ The public form does not authenticate users and deliberately does not deduplicat
 - Four badge designs, each available as acrylic or wood.
 - 2-inch pins priced at £3 each.
 - Planned postage shown as £2 per order.
+- Admin profit estimate treats postage as £2 charged and £1.55 estimated cost per order.
 - Independent quantity controls for all eight design/material variants.
 - Discord username field.
 - Live total pins and estimated spend.
@@ -33,7 +34,7 @@ styles.css                  Shared styling
 catalogue.js                Badge catalogue and variant definitions
 public-form.js              Public form behaviour and Firestore create
 admin.js                    Shared admin sign-in, dashboard, calculations, delete and CSV export behaviour
-firebase-config.js          Firebase config, admin email list and shared pricing settings
+firebase-config.js          Firebase config, admin email list and shared pricing/postage settings
 firestore.rules             Firestore security rules
 firebase.json               Firebase rules deployment config
 assets/images/products/     Replaceable final badge artwork

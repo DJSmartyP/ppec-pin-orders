@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PPEC Badge Admin Calculations</title>
     <meta name="description" content="Profit and cost calculations for PPEC badge interest submissions.">
-    <link rel="stylesheet" href="styles.css?v=20260904a">
+    <link rel="stylesheet" href="styles.css?v=20260904b">
   </head>
   <body>
     <header class="site-header">
@@ -51,8 +51,12 @@
                 <input id="profit-selling-price" type="number" min="0" step="0.01" inputmode="decimal">
               </label>
               <label class="cost-field" for="profit-postage-price">
-                Planned postage per order (£)
+                Postage charged per order (£)
                 <input id="profit-postage-price" type="number" min="0" step="0.01" inputmode="decimal">
+              </label>
+              <label class="cost-field" for="profit-postage-cost">
+                Actual postage cost per order (£)
+                <input id="profit-postage-cost" type="number" min="0" step="0.01" inputmode="decimal">
               </label>
               <label class="cost-field" for="profit-usd-rate">
                 USD to GBP rate
@@ -94,6 +98,6 @@
       </section>
     </main>
 
-    <script type="module" src="admin.js?v=20260904a"></script>
+    <script type="module" src="admin.js?v=20260904b"></script>
   </body>
 </html>

@@ -18,3 +18,4 @@ export const adminEmails = [
 export const collectionName = "interestSubmissions";
 export const unitPricePence = 300;
 export const plannedPostagePence = 200;
+export const actualPostageCostPence = 155;

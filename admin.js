@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904a";
-import { adminEmails, collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904a";
+import { designs, materials, variants } from "./catalogue.js?v=20260904b";
+import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904b";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -32,6 +32,7 @@ const profitResultGrid = document.querySelector("#profit-result-grid");
 const profitInputs = {
   sellingPrice: document.querySelector("#profit-selling-price"),
   postagePrice: document.querySelector("#profit-postage-price"),
+  postageCost: document.querySelector("#profit-postage-cost"),
   usdRate: document.querySelector("#profit-usd-rate"),
   vograceShipping: document.querySelector("#profit-vograce-shipping"),
   fixedCosts: document.querySelector("#profit-fixed-costs"),
@@ -70,7 +71,7 @@ const configured = isFirebaseConfigured();
 const app = configured ? initializeApp(firebaseConfig) : null;
 const auth = configured ? getAuth(app) : null;
 const db = configured ? getFirestore(app) : null;
-const hasProfitTools = Boolean(profitResultGrid && profitInputs.sellingPrice && profitInputs.postagePrice);
+const hasProfitTools = Boolean(profitResultGrid && profitInputs.sellingPrice && profitInputs.postagePrice && profitInputs.postageCost);
 
 let submissions = [];
 let aggregates = createEmptyAggregates();
@@ -249,7 +250,7 @@ function renderSubmissionList() {
       <article class="submission-card">
         <div>
           <h3>${escapeHtml(submission.discordUsername || "No Discord username")}</h3>
-          <p>${formatDate(submission.submittedAt)} · ${submission.totalPins || 0} pins · ${formatPounds((submission.estimatedSpendPence || 0))} badge estimate · ${formatPounds(plannedPostagePence)} planned postage</p>
+          <p>${formatDate(submission.submittedAt)} · ${submission.totalPins || 0} pins · ${formatPounds((submission.estimatedSpendPence || 0))} badge estimate · ${formatPounds(plannedPostagePence)} postage charged</p>
           <ul>${rows || "<li>No quantities recorded</li>"}</ul>
         </div>
         <button class="danger-button" type="button" data-delete-id="${submission.id}">Delete</button>
@@ -262,6 +263,7 @@ function initialiseProfitInputs() {
   const savedValues = readProfitInputs();
   profitInputs.sellingPrice.value = savedValues.sellingPrice || formatInputPounds(unitPricePence);
   profitInputs.postagePrice.value = savedValues.postagePrice || formatInputPounds(plannedPostagePence);
+  profitInputs.postageCost.value = savedValues.postageCost || formatInputPounds(actualPostageCostPence);
   profitInputs.usdRate.value = savedValues.usdRate || "0.7402";
   profitInputs.vograceShipping.value = savedValues.vograceShipping || "20.00";
   profitInputs.fixedCosts.value = savedValues.fixedCosts || "";
@@ -315,7 +317,8 @@ function renderProfitEstimate(finance) {
 function renderProfitMetrics(target, finance) {
   target.innerHTML = [
     profitMetric("Badge revenue", formatPounds(finance.badgeRevenuePence)),
-    profitMetric("Planned postage charged", formatPounds(finance.plannedPostageRevenuePence)),
+    profitMetric("Postage charged", formatPounds(finance.plannedPostageRevenuePence)),
+    profitMetric("Actual postage cost", formatPounds(finance.actualPostageCostPence)),
     profitMetric("Total estimated revenue", formatPounds(finance.revenuePence)),
     profitMetric("Vograce product cost", formatDollars(finance.productCostUsdCents)),
     profitMetric("Vograce total with shipping", formatDollars(finance.vograceTotalUsdCents)),
@@ -343,6 +346,7 @@ function calculateFinance({ acrylicTotal, woodTotal, totalPins }) {
 
   const badgeRevenuePence = totalPins * settings.sellingPricePence;
   const plannedPostageRevenuePence = submissions.length * settings.postagePricePence;
+  const totalActualPostageCostPence = submissions.length * settings.actualPostageCostPence;
   const revenuePence = badgeRevenuePence + plannedPostageRevenuePence;
   const productCostUsdCents = (acrylicTotal * acrylicTier.costCents) + (woodTotal * woodTier.costCents);
   const vograceTotalUsdCents = productCostUsdCents + settings.vograceShippingCents;
@@ -350,7 +354,7 @@ function calculateFinance({ acrylicTotal, woodTotal, totalPins }) {
   const vograceShippingPence = Math.round(settings.vograceShippingCents * settings.usdToGbpRate);
   const percentCostPence = Math.round(revenuePence * settings.percentCostRate);
   const vograceCostPence = productCostPence + vograceShippingPence;
-  const otherCostPence = settings.fixedCostsPence + percentCostPence;
+  const otherCostPence = totalActualPostageCostPence + settings.fixedCostsPence + percentCostPence;
   const totalCostPence = vograceCostPence + otherCostPence;
   const profitPence = revenuePence - totalCostPence;
   const margin = revenuePence > 0 ? `${Math.round((profitPence / revenuePence) * 1000) / 10}%` : "0%";
@@ -363,6 +367,7 @@ function calculateFinance({ acrylicTotal, woodTotal, totalPins }) {
   return {
     acrylicTier,
     acrylicTotal,
+    actualPostageCostPence: totalActualPostageCostPence,
     badgeRevenuePence,
     breakEvenPins,
     margin,
@@ -392,6 +397,7 @@ function saveProfitInputs() {
   localStorage.setItem("ppecProfitInputs", JSON.stringify({
     sellingPrice: profitInputs.sellingPrice.value,
     postagePrice: profitInputs.postagePrice.value,
+    postageCost: profitInputs.postageCost.value,
     usdRate: profitInputs.usdRate.value,
     vograceShipping: profitInputs.vograceShipping.value,
     fixedCosts: profitInputs.fixedCosts.value,
@@ -417,6 +423,7 @@ function readProfitSettings() {
   return {
     sellingPricePence: poundsInputToPence(profitInputs.sellingPrice?.value || savedValues.sellingPrice || formatInputPounds(unitPricePence)),
     postagePricePence: poundsInputToPence(profitInputs.postagePrice?.value || savedValues.postagePrice || formatInputPounds(plannedPostagePence)),
+    actualPostageCostPence: poundsInputToPence(profitInputs.postageCost?.value || savedValues.postageCost || formatInputPounds(actualPostageCostPence)),
     usdToGbpRate: numberInput(profitInputs.usdRate?.value || savedValues.usdRate || "0.7402"),
     vograceShippingCents: dollarsInputToCents(profitInputs.vograceShipping?.value || savedValues.vograceShipping || "20"),
     fixedCostsPence: poundsInputToPence(profitInputs.fixedCosts?.value || savedValues.fixedCosts || ""),
@@ -527,7 +534,8 @@ function buildCsv() {
     ...variants.map((variant) => `${variant.designName} ${variant.materialName}`),
     "Total pins",
     "Estimated badge spend",
-    "Planned postage"
+    "Postage charged",
+    "Estimated postage cost"
   ].map(csvCell).join(","));
 
   submissions.forEach((submission) => {
@@ -538,7 +546,8 @@ function buildCsv() {
       ...variants.map((variant) => getQuantity(submission, variant.key)),
       submission.totalPins || 0,
       formatPounds(submission.estimatedSpendPence || 0),
-      formatPounds(plannedPostagePence)
+      formatPounds(plannedPostagePence),
+      formatPounds(actualPostageCostPence)
     ].map(csvCell).join(","));
   });
 
