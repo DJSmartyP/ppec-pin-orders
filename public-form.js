@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904b";
-import { collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904b";
+import { designs, materials, variants } from "./catalogue.js?v=20260904d";
+import { collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904d";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   addDoc,
@@ -125,12 +125,14 @@ function renderCatalogue() {
           </div>
         </div>
         <div class="badge-card-body">
-          <div>
+          <div class="badge-copy">
             <h2>${design.name}</h2>
             <p>${design.note}</p>
-            <p class="badge-meta">2-inch pin · £3 each</p>
           </div>
-          <div class="quantity-group">${controls}</div>
+          <div class="badge-card-actions">
+            <p class="badge-meta">2-inch pin · £3 each</p>
+            <div class="quantity-group">${controls}</div>
+          </div>
         </div>
       </article>
     `;

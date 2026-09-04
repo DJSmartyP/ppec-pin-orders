@@ -469,8 +469,14 @@ h3 {
   gap: 18px;
 }
 
-.badge-card-body > div:first-child {
+.badge-copy {
   min-height: 126px;
+}
+
+.badge-card-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
 }
 
 .badge-card h2 {
@@ -478,7 +484,7 @@ h3 {
 }
 
 .badge-meta {
-  margin-top: 8px !important;
+  margin: 0 !important;
   color: var(--purple-dark) !important;
   font-family: var(--body-font) !important;
   font-weight: 700;
@@ -487,7 +493,6 @@ h3 {
 .quantity-group {
   display: grid;
   gap: 12px;
-  margin-top: auto;
 }
 
 .quantity-row {
@@ -977,7 +982,7 @@ tfoot td {
     gap: 14px;
   }
 
-  .badge-card-body > div:first-child {
+  .badge-copy {
     min-height: 136px;
   }
 
@@ -1060,7 +1065,7 @@ tfoot td {
     gap: 10px;
   }
 
-  .badge-card-body > div:first-child {
+  .badge-copy {
     min-height: 118px;
   }
 
@@ -1140,7 +1145,7 @@ tfoot td {
     grid-template-columns: 1fr;
   }
 
-  .badge-card-body > div:first-child {
+  .badge-copy {
     min-height: auto;
   }
 }
