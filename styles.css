@@ -399,7 +399,7 @@ h3 {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
@@ -447,10 +447,13 @@ h3 {
 }
 
 .badge-card:hover .reference-art,
-.badge-card:focus-within .reference-art,
+.badge-card:focus-within .reference-art {
+  opacity: 1;
+}
+
 .badge-card:hover .material-tags,
 .badge-card:focus-within .material-tags {
-  opacity: 1;
+  opacity: 0;
 }
 
 .badge-card-body {
@@ -678,6 +681,10 @@ input[name="discordUsername"],
   background: linear-gradient(180deg, var(--purple), var(--purple-dark));
   border-color: rgba(75, 6, 111, 0.68);
   color: #fff7e7;
+}
+
+.dashboard-section {
+  margin-bottom: 24px;
 }
 
 .auth-panel {

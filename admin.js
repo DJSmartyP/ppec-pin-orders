@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260903k";
-import { adminEmails, collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260903k";
+import { designs, materials, variants } from "./catalogue.js?v=20260904a";
+import { adminEmails, collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904a";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -21,6 +21,7 @@ const signOutButton = document.querySelector("#sign-out-button");
 const authMessage = document.querySelector("#auth-message");
 const dashboard = document.querySelector("#dashboard");
 const metricGrid = document.querySelector("#metric-grid");
+const dashboardAnalyticsGrid = document.querySelector("#dashboard-analytics-grid");
 const aggregateBody = document.querySelector("#aggregate-body");
 const aggregateFoot = document.querySelector("#aggregate-foot");
 const materialTotals = document.querySelector("#material-totals");
@@ -171,18 +172,22 @@ async function loadSubmissions() {
 
 function renderAdminPage() {
   const totals = calculateTotals();
+  const finance = calculateFinance(totals);
 
   if (hasProfitTools) {
-    renderProfitEstimate(totals);
+    renderProfitEstimate(finance);
+  }
+
+  if (dashboardAnalyticsGrid) {
+    renderProfitMetrics(dashboardAnalyticsGrid, finance);
   }
 
   if (metricGrid) {
     metricGrid.innerHTML = [
       metric("Submissions", submissions.length),
       metric("Total pins", totals.totalPins),
-      metric("Estimated badge sales", formatPounds(totals.totalPins * unitPricePence)),
-      metric("Planned postage", formatPounds(submissions.length * plannedPostagePence)),
-      metric("Acrylic / Wood", `${totals.acrylicTotal} / ${totals.woodTotal}`)
+      metric("Acrylic pins", totals.acrylicTotal),
+      metric("Wood pins", totals.woodTotal)
     ].join("");
   }
 
@@ -303,46 +308,24 @@ function initialiseProfitInputs() {
   });
 }
 
-function renderProfitEstimate({ acrylicTotal, woodTotal, totalPins }) {
-  const sellingPricePence = poundsInputToPence(profitInputs.sellingPrice.value || formatInputPounds(unitPricePence));
-  const postagePricePence = poundsInputToPence(profitInputs.postagePrice.value || formatInputPounds(plannedPostagePence));
-  const usdToGbpRate = numberInput(profitInputs.usdRate.value || "0.7402");
-  const acrylicTier = tierForQuantity("acrylic", acrylicTotal);
-  const woodTier = tierForQuantity("wood", woodTotal);
-  const vograceShippingCents = dollarsInputToCents(profitInputs.vograceShipping.value || "20");
-  const fixedCostsPence = poundsInputToPence(profitInputs.fixedCosts.value);
-  const percentCostRate = numberInput(profitInputs.percentCost.value) / 100;
+function renderProfitEstimate(finance) {
+  renderProfitMetrics(profitResultGrid, finance);
+}
 
-  const badgeRevenuePence = totalPins * sellingPricePence;
-  const plannedPostageRevenuePence = submissions.length * postagePricePence;
-  const revenuePence = badgeRevenuePence + plannedPostageRevenuePence;
-  const productCostUsdCents = (acrylicTotal * acrylicTier.costCents) + (woodTotal * woodTier.costCents);
-  const vograceTotalUsdCents = productCostUsdCents + vograceShippingCents;
-  const productCostPence = Math.round(productCostUsdCents * usdToGbpRate);
-  const vograceShippingPence = Math.round(vograceShippingCents * usdToGbpRate);
-  const percentCostPence = Math.round(revenuePence * percentCostRate);
-  const totalCostPence = productCostPence + vograceShippingPence + fixedCostsPence + percentCostPence;
-  const profitPence = revenuePence - totalCostPence;
-  const margin = revenuePence > 0 ? `${Math.round((profitPence / revenuePence) * 1000) / 10}%` : "0%";
-  const variableCostPerPin = totalPins > 0 ? (productCostPence + percentCostPence) / totalPins : 0;
-  const contributionPerPin = sellingPricePence - variableCostPerPin;
-  const breakEvenPins = contributionPerPin > 0 && fixedCostsPence > 0
-    ? Math.ceil(fixedCostsPence / contributionPerPin)
-    : fixedCostsPence > 0 ? "Not covered" : 0;
-
-  profitResultGrid.innerHTML = [
-    profitMetric("Badge revenue", formatPounds(badgeRevenuePence)),
-    profitMetric("Planned postage charged", formatPounds(plannedPostageRevenuePence)),
-    profitMetric("Total estimated revenue", formatPounds(revenuePence)),
-    profitMetric("Vograce product cost", formatDollars(productCostUsdCents)),
-    profitMetric("Vograce total with shipping", formatDollars(vograceTotalUsdCents)),
-    profitMetric("Estimated Vograce cost", formatPounds(productCostPence + vograceShippingPence)),
-    profitMetric("Other fixed + percentage costs", formatPounds(fixedCostsPence + percentCostPence)),
-    profitMetric("Estimated profit", formatPounds(profitPence), profitPence >= 0 ? "good" : "bad"),
-    profitMetric("Profit margin", margin),
-    profitMetric("Break-even pins", breakEvenPins),
-    profitMetric("Acrylic tier used", tierLabel(acrylicTier, acrylicTotal)),
-    profitMetric("Wood tier used", tierLabel(woodTier, woodTotal))
+function renderProfitMetrics(target, finance) {
+  target.innerHTML = [
+    profitMetric("Badge revenue", formatPounds(finance.badgeRevenuePence)),
+    profitMetric("Planned postage charged", formatPounds(finance.plannedPostageRevenuePence)),
+    profitMetric("Total estimated revenue", formatPounds(finance.revenuePence)),
+    profitMetric("Vograce product cost", formatDollars(finance.productCostUsdCents)),
+    profitMetric("Vograce total with shipping", formatDollars(finance.vograceTotalUsdCents)),
+    profitMetric("Estimated Vograce cost", formatPounds(finance.vograceCostPence)),
+    profitMetric("Other fixed + percentage costs", formatPounds(finance.otherCostPence)),
+    profitMetric("Estimated profit", formatPounds(finance.profitPence), finance.profitPence >= 0 ? "good" : "bad"),
+    profitMetric("Profit margin", finance.margin),
+    profitMetric("Break-even pins", finance.breakEvenPins),
+    profitMetric("Acrylic tier used", tierLabel(finance.acrylicTier, finance.acrylicTotal)),
+    profitMetric("Wood tier used", tierLabel(finance.woodTier, finance.woodTotal))
   ].join("");
 }
 
@@ -351,6 +334,49 @@ function calculateTotals() {
   const acrylicTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_acrylic`], 0);
   const woodTotal = designs.reduce((sum, design) => sum + aggregates.byVariant[`${design.id}_wood`], 0);
   return { acrylicTotal, totalPins, woodTotal };
+}
+
+function calculateFinance({ acrylicTotal, woodTotal, totalPins }) {
+  const settings = readProfitSettings();
+  const acrylicTier = tierForQuantity("acrylic", acrylicTotal, settings.tiers.acrylic);
+  const woodTier = tierForQuantity("wood", woodTotal, settings.tiers.wood);
+
+  const badgeRevenuePence = totalPins * settings.sellingPricePence;
+  const plannedPostageRevenuePence = submissions.length * settings.postagePricePence;
+  const revenuePence = badgeRevenuePence + plannedPostageRevenuePence;
+  const productCostUsdCents = (acrylicTotal * acrylicTier.costCents) + (woodTotal * woodTier.costCents);
+  const vograceTotalUsdCents = productCostUsdCents + settings.vograceShippingCents;
+  const productCostPence = Math.round(productCostUsdCents * settings.usdToGbpRate);
+  const vograceShippingPence = Math.round(settings.vograceShippingCents * settings.usdToGbpRate);
+  const percentCostPence = Math.round(revenuePence * settings.percentCostRate);
+  const vograceCostPence = productCostPence + vograceShippingPence;
+  const otherCostPence = settings.fixedCostsPence + percentCostPence;
+  const totalCostPence = vograceCostPence + otherCostPence;
+  const profitPence = revenuePence - totalCostPence;
+  const margin = revenuePence > 0 ? `${Math.round((profitPence / revenuePence) * 1000) / 10}%` : "0%";
+  const variableCostPerPin = totalPins > 0 ? (productCostPence + percentCostPence) / totalPins : 0;
+  const contributionPerPin = settings.sellingPricePence - variableCostPerPin;
+  const breakEvenPins = contributionPerPin > 0 && settings.fixedCostsPence > 0
+    ? Math.ceil(settings.fixedCostsPence / contributionPerPin)
+    : settings.fixedCostsPence > 0 ? "Not covered" : 0;
+
+  return {
+    acrylicTier,
+    acrylicTotal,
+    badgeRevenuePence,
+    breakEvenPins,
+    margin,
+    otherCostPence,
+    plannedPostageRevenuePence,
+    productCostUsdCents,
+    profitPence,
+    revenuePence,
+    totalPins,
+    vograceCostPence,
+    vograceTotalUsdCents,
+    woodTier,
+    woodTotal
+  };
 }
 
 function profitMetric(label, value, tone = "") {
@@ -385,6 +411,23 @@ function readProfitInputs() {
   }
 }
 
+function readProfitSettings() {
+  const savedValues = readProfitInputs();
+
+  return {
+    sellingPricePence: poundsInputToPence(profitInputs.sellingPrice?.value || savedValues.sellingPrice || formatInputPounds(unitPricePence)),
+    postagePricePence: poundsInputToPence(profitInputs.postagePrice?.value || savedValues.postagePrice || formatInputPounds(plannedPostagePence)),
+    usdToGbpRate: numberInput(profitInputs.usdRate?.value || savedValues.usdRate || "0.7402"),
+    vograceShippingCents: dollarsInputToCents(profitInputs.vograceShipping?.value || savedValues.vograceShipping || "20"),
+    fixedCostsPence: poundsInputToPence(profitInputs.fixedCosts?.value || savedValues.fixedCosts || ""),
+    percentCostRate: numberInput(profitInputs.percentCost?.value || savedValues.percentCost || "") / 100,
+    tiers: {
+      acrylic: tierLists.acrylic ? readTiersFromDom("acrylic") : savedValues.tiers?.acrylic || defaultTiers("acrylic", savedValues.acrylicCost),
+      wood: tierLists.wood ? readTiersFromDom("wood") : savedValues.tiers?.wood || defaultTiers("wood", savedValues.woodCost)
+    }
+  };
+}
+
 function renderTierInputs(material, tiers) {
   if (!tierLists[material]) return;
 
@@ -415,7 +458,7 @@ function readTiersFromDom(material) {
 }
 
 function normaliseTiers(tiers) {
-  const rows = tiers
+  const rows = (tiers || [])
     .map((tier) => ({
       minQty: Math.max(1, Math.floor(numberInput(tier.minQty || 1))),
       cost: String(tier.cost ?? "")
@@ -435,8 +478,8 @@ function nextTierQuantity(tiers) {
   return highest > 0 ? highest + 25 : 1;
 }
 
-function tierForQuantity(material, quantity) {
-  const tiers = readTiersFromDom(material);
+function tierForQuantity(material, quantity, tiersOverride = null) {
+  const tiers = normaliseTiers(tiersOverride || readTiersFromDom(material));
   const activeTier = tiers
     .filter((tier) => quantity >= tier.minQty)
     .at(-1) || tiers[0] || defaultTiers(material)[0];

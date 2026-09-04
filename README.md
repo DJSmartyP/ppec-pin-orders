@@ -78,7 +78,7 @@ You can also paste the contents of `firestore.rules` into the Firebase Console r
 
 ## Replacing Badge Artwork
 
-The public form uses:
+The public form uses the temporary split-finish mock-ups in `assets/images/mockups/` as the main badge images. The original artwork appears on hover/focus and lives at:
 
 - `assets/images/products/ppec-logo.png`
 - `assets/images/products/explorers-card.png`
@@ -87,7 +87,7 @@ The public form uses:
 
 Replace those files with final artwork later, keeping the same filenames. If you rename the files, update `catalogue.js`.
 
-The rollover state uses temporary split-finish mock-ups in `assets/images/mockups/`. Replace those later if you get better product renders, keeping the same filenames.
+Replace the mock-up files later if you get better product renders, keeping the same filenames.
 
 ## Data Model
 

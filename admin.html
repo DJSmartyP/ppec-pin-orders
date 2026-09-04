@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PPEC Badge Admin</title>
     <meta name="description" content="Admin dashboard for PPEC badge interest submissions.">
-    <link rel="stylesheet" href="styles.css?v=20260903k">
+    <link rel="stylesheet" href="styles.css?v=20260904a">
   </head>
   <body>
     <header class="site-header">
@@ -37,6 +37,16 @@
 
       <section class="dashboard hidden" id="dashboard" aria-label="Admin dashboard">
         <div class="metric-grid" id="metric-grid"></div>
+
+        <section class="dashboard-section" aria-labelledby="dashboard-analytics-title">
+          <div class="dashboard-actions">
+            <div>
+              <h2 id="dashboard-analytics-title">Financial analytics</h2>
+              <p class="section-note">Uses the current totals and the saved assumptions from the calculations page.</p>
+            </div>
+          </div>
+          <div class="profit-result-grid dashboard-analytics-grid" id="dashboard-analytics-grid" aria-live="polite"></div>
+        </section>
 
         <div class="dashboard-actions">
           <h2>Manufacturing totals</h2>
@@ -71,6 +81,6 @@
       </section>
     </main>
 
-    <script type="module" src="admin.js?v=20260903k"></script>
+    <script type="module" src="admin.js?v=20260904a"></script>
   </body>
 </html>
