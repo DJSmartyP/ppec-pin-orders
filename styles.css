@@ -382,21 +382,11 @@ h3 {
   width: calc(100% - 48px);
   height: calc(100% - 48px);
   object-fit: contain;
-  transition: opacity 180ms ease, transform 180ms ease, filter 180ms ease;
+  transition: transform 180ms ease, filter 180ms ease;
 }
 
 .product-art {
   filter: drop-shadow(0 14px 22px rgba(36, 23, 14, 0.2));
-}
-
-.reference-art {
-  inset: 22px;
-  width: calc(100% - 44px);
-  height: calc(100% - 44px);
-  object-fit: contain;
-  opacity: 0;
-  transform: scale(0.98);
-  filter: drop-shadow(0 14px 22px rgba(36, 23, 14, 0.16));
 }
 
 .material-tags {
@@ -443,23 +433,6 @@ h3 {
   border-color: rgba(49, 95, 103, 0.36);
   color: #250333;
   backdrop-filter: blur(4px);
-}
-
-.badge-card:hover .product-art,
-.badge-card:focus-within .product-art {
-  opacity: 0;
-  transform: scale(0.96);
-}
-
-.badge-card:hover .reference-art,
-.badge-card:focus-within .reference-art {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.badge-card:hover .material-tags,
-.badge-card:focus-within .material-tags {
-  opacity: 0;
 }
 
 .badge-card-body {

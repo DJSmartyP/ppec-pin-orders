@@ -82,7 +82,7 @@ You can also paste the contents of `firestore.rules` into the Firebase Console r
 
 ## Replacing Badge Artwork
 
-The public form uses lightweight WebP copies in `assets/images/optimised/` for speed. The temporary split-finish mock-ups in `assets/images/mockups/` and the original artwork in `assets/images/products/` are kept as replaceable source files.
+The public form uses lightweight WebP split-finish mock-ups in `assets/images/optimised/` for speed. The temporary full-size mock-ups in `assets/images/mockups/` and the original artwork in `assets/images/products/` are kept as replaceable source files.
 
 The original artwork lives at:
 

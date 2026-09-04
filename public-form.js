@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904i";
-import { collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904i";
+import { designs, materials, variants } from "./catalogue.js?v=20260904j";
+import { collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904j";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   addDoc,
@@ -118,7 +118,6 @@ function renderCatalogue() {
       <article class="badge-card">
         <div class="badge-image-wrap">
           <img class="badge-art product-art" src="${design.image}" alt="${design.alt}" loading="lazy">
-          <img class="badge-art reference-art" src="${design.referenceImage}" alt="${design.referenceAlt}" loading="lazy">
           <div class="material-tags" aria-hidden="true">
             <span class="finish-tag wood-tag">Wood</span>
             <span class="finish-tag acrylic-tag">Acrylic</span>
