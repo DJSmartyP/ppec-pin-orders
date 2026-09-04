@@ -1,5 +1,5 @@
-import { designs, materials, variants } from "./catalogue.js?v=20260904b";
-import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904b";
+import { designs, materials, variants } from "./catalogue.js?v=20260904f";
+import { actualPostageCostPence, adminEmails, collectionName, firebaseConfig, kofiFeeRate, paypalFeeRate, paypalFixedFeePence, plannedPostagePence, unitPricePence } from "./firebase-config.js?v=20260904f";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
   GoogleAuthProvider,
@@ -323,7 +323,9 @@ function renderProfitMetrics(target, finance) {
     profitMetric("Vograce product cost", formatDollars(finance.productCostUsdCents)),
     profitMetric("Vograce total with shipping", formatDollars(finance.vograceTotalUsdCents)),
     profitMetric("Estimated Vograce cost", formatPounds(finance.vograceCostPence)),
-    profitMetric("Other fixed + percentage costs", formatPounds(finance.otherCostPence)),
+    profitMetric("Ko-fi fees", formatPounds(finance.kofiFeePence)),
+    profitMetric("PayPal fees", formatPounds(finance.paypalFeePence)),
+    profitMetric("Other fixed + buffer costs", formatPounds(finance.otherCostPence)),
     profitMetric("Estimated profit", formatPounds(finance.profitPence), finance.profitPence >= 0 ? "good" : "bad"),
     profitMetric("Profit margin", finance.margin),
     profitMetric("Break-even pins", finance.breakEvenPins),
@@ -352,10 +354,12 @@ function calculateFinance({ acrylicTotal, woodTotal, totalPins }) {
   const vograceTotalUsdCents = productCostUsdCents + settings.vograceShippingCents;
   const productCostPence = Math.round(productCostUsdCents * settings.usdToGbpRate);
   const vograceShippingPence = Math.round(settings.vograceShippingCents * settings.usdToGbpRate);
+  const { kofiFeePence, paypalFeePence } = calculatePerOrderFees(settings);
   const percentCostPence = Math.round(revenuePence * settings.percentCostRate);
   const vograceCostPence = productCostPence + vograceShippingPence;
-  const otherCostPence = totalActualPostageCostPence + settings.fixedCostsPence + percentCostPence;
-  const totalCostPence = vograceCostPence + otherCostPence;
+  const otherCostPence = settings.fixedCostsPence + percentCostPence;
+  const platformFeePence = kofiFeePence + paypalFeePence;
+  const totalCostPence = vograceCostPence + totalActualPostageCostPence + platformFeePence + otherCostPence;
   const profitPence = revenuePence - totalCostPence;
   const margin = revenuePence > 0 ? `${Math.round((profitPence / revenuePence) * 1000) / 10}%` : "0%";
   const variableCostPerPin = totalPins > 0 ? (productCostPence + percentCostPence) / totalPins : 0;
@@ -370,8 +374,11 @@ function calculateFinance({ acrylicTotal, woodTotal, totalPins }) {
     actualPostageCostPence: totalActualPostageCostPence,
     badgeRevenuePence,
     breakEvenPins,
+    kofiFeePence,
     margin,
     otherCostPence,
+    paypalFeePence,
+    platformFeePence,
     plannedPostageRevenuePence,
     productCostUsdCents,
     profitPence,
@@ -382,6 +389,17 @@ function calculateFinance({ acrylicTotal, woodTotal, totalPins }) {
     woodTier,
     woodTotal
   };
+}
+
+function calculatePerOrderFees(settings) {
+  return submissions.reduce((totals, submission) => {
+    const orderPins = variants.reduce((sum, variant) => sum + getQuantity(submission, variant.key), 0);
+    const orderRevenuePence = (orderPins * settings.sellingPricePence) + settings.postagePricePence;
+
+    totals.kofiFeePence += Math.round(orderRevenuePence * kofiFeeRate);
+    totals.paypalFeePence += Math.round(orderRevenuePence * paypalFeeRate) + paypalFixedFeePence;
+    return totals;
+  }, { kofiFeePence: 0, paypalFeePence: 0 });
 }
 
 function profitMetric(label, value, tone = "") {
@@ -513,6 +531,8 @@ function addSubmissionToAggregates(submission) {
 }
 
 function buildCsv() {
+  const totals = calculateTotals();
+  const finance = calculateFinance(totals);
   const lines = [];
   lines.push(["PPEC Badge Interest Export"].join(","));
   lines.push([]);
@@ -524,6 +544,22 @@ function buildCsv() {
     const wood = aggregates.byVariant[`${design.id}_wood`];
     lines.push([design.name, acrylic, wood, acrylic + wood].map(csvCell).join(","));
   });
+
+  lines.push([]);
+  lines.push(["Financial analytics"]);
+  [
+    ["Badge revenue", formatPounds(finance.badgeRevenuePence)],
+    ["Postage charged", formatPounds(finance.plannedPostageRevenuePence)],
+    ["Actual postage cost", formatPounds(finance.actualPostageCostPence)],
+    ["Ko-fi fees (5% per order, including postage)", formatPounds(finance.kofiFeePence)],
+    ["PayPal fees (30p + 2.9% per order, including postage)", formatPounds(finance.paypalFeePence)],
+    ["Vograce product cost", formatDollars(finance.productCostUsdCents)],
+    ["Vograce total with shipping", formatDollars(finance.vograceTotalUsdCents)],
+    ["Estimated Vograce cost", formatPounds(finance.vograceCostPence)],
+    ["Other fixed + buffer costs", formatPounds(finance.otherCostPence)],
+    ["Estimated profit", formatPounds(finance.profitPence)],
+    ["Profit margin", finance.margin]
+  ].forEach((row) => lines.push(row.map(csvCell).join(",")));
 
   lines.push([]);
   lines.push(["Individual submissions"]);

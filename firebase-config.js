@@ -19,3 +19,9 @@ export const collectionName = "interestSubmissions";
 export const unitPricePence = 300;
 export const plannedPostagePence = 200;
 export const actualPostageCostPence = 155;
+
+// Payment fees are calculated per order/submission against badges plus
+// planned postage, not per individual pin.
+export const kofiFeeRate = 0.05;
+export const paypalFeeRate = 0.029;
+export const paypalFixedFeePence = 30;
